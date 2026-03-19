@@ -59,7 +59,7 @@ export async function POST() {
       }
 
       try {
-        await insertMention({
+        const result = await insertMention({
           id: `rss-${item.externalId}`,
           sourceId: `src-${item.platform}`,
           platform: item.platform,
@@ -71,7 +71,9 @@ export async function POST() {
           engagementCount: item.engagementCount,
           createdAt,
         });
-        newCount++;
+        if (result.rowsAffected > 0) {
+          newCount++;
+        }
       } catch {
         // Duplicate or insert error — skip silently
       }
