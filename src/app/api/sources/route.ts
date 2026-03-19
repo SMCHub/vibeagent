@@ -1,0 +1,15 @@
+import { NextResponse } from 'next/server';
+import { NEWS_SOURCES, SOCIAL_MEDIA_TARGETS, CANTONS, GOOGLE_NEWS_GEO_FEEDS } from '@/lib/sources/switzerland';
+
+export async function GET() {
+  return NextResponse.json({
+    cantons: CANTONS,
+    newsSources: NEWS_SOURCES.length,
+    socialMediaTargets: SOCIAL_MEDIA_TARGETS.length,
+    googleNewsGeoFeeds: Object.keys(GOOGLE_NEWS_GEO_FEEDS).length,
+    sources: {
+      news: NEWS_SOURCES.map(s => ({ id: s.id, name: s.name, region: s.region, language: s.language, hasRss: !!s.rssFeed, hasGoogleProxy: s.googleNewsProxy })),
+      social: SOCIAL_MEDIA_TARGETS.map(s => ({ id: s.id, platform: s.platform, name: s.name, region: s.region })),
+    }
+  });
+}
