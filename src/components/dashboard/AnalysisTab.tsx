@@ -38,7 +38,7 @@ const mentionsOverTime = [
 ];
 
 const COLORS = {
-  positive: '#644a40',
+  positive: '#1a73e8',
   negative: '#ef4444',
   neutral: '#9ca3af',
 };
@@ -53,11 +53,11 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, icon: Icon, iconColor, iconBg }: KpiCardProps) {
   return (
-    <div className="kpi-card rounded-xl border border-[#d8d8d8] bg-white p-5">
+    <div className="kpi-card rounded-xl border border-[#dadce0] bg-white p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-[#646464]">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-[#202020]">{value}</p>
+          <p className="text-sm font-medium text-[#5f6368]">{label}</p>
+          <p className="mt-1 text-3xl font-bold text-[#202124]">{value}</p>
         </div>
         <div
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
@@ -116,22 +116,22 @@ export default function AnalysisTab({
           label="Total Erwähnungen"
           value={data.stats.totalMentions}
           icon={BarChart3}
-          iconColor="#644a40"
-          iconBg="bg-[#ffdfb5]"
+          iconColor="#1a73e8"
+          iconBg="bg-[#e8f0fe]"
         />
         <KpiCard
           label="Avg. Engagement"
           value={avgEngagement.toLocaleString('de-DE')}
           icon={Activity}
-          iconColor="#644a40"
-          iconBg="bg-[#fff5e6]"
+          iconColor="#1a73e8"
+          iconBg="bg-[#e8f0fe]"
         />
         <KpiCard
           label="Presence Score"
           value={`${presenceScore}/100`}
           icon={Target}
-          iconColor="#644a40"
-          iconBg="bg-[#ffdfb5]"
+          iconColor="#1a73e8"
+          iconBg="bg-[#e8f0fe]"
         />
         <KpiCard
           label="Positiv/Negativ Ratio"
@@ -146,9 +146,12 @@ export default function AnalysisTab({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Sentiment Pie Chart */}
         <div className="chart-container">
-          <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+          <h3 className="mb-1 text-sm font-semibold text-[#202124]">
             Sentiment-Verteilung
           </h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">
+            Verteilung der Stimmung aller Erwähnungen. Zeigt den Anteil positiver, negativer und neutraler Nennungen.
+          </p>
           <div className="flex items-center justify-center" style={{ height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -169,7 +172,7 @@ export default function AnalysisTab({
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
-                    border: '1px solid #d8d8d8',
+                    border: '1px solid #dadce0',
                     borderRadius: 8,
                     fontSize: 12,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -180,14 +183,14 @@ export default function AnalysisTab({
             </ResponsiveContainer>
           </div>
           {/* Legend */}
-          <div className="mt-2 flex justify-center gap-6">
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground mt-3">
             {sentimentData.map((s) => (
-              <div key={s.name} className="flex items-center gap-2">
+              <div key={s.name} className="flex items-center gap-1.5">
                 <span
-                  className="inline-block h-3 w-3 rounded-full"
+                  className="inline-block h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: s.color }}
                 />
-                <span className="text-xs text-[#646464]">{s.name}</span>
+                <span>{s.name} ({s.value}%)</span>
               </div>
             ))}
           </div>
@@ -195,28 +198,31 @@ export default function AnalysisTab({
 
         {/* Mentions over time */}
         <div className="chart-container">
-          <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+          <h3 className="mb-1 text-sm font-semibold text-[#202124]">
             Erwähnungen über Zeit
           </h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">
+            Sentiment-Verlauf über die letzten 7 Tage. Zeigt die tägliche Entwicklung nach Stimmungskategorie.
+          </p>
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={mentionsOverTime} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#efefef" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: '#999999', fontSize: 12 }}
+                  tick={{ fill: '#5f6368', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: '#999999', fontSize: 12 }}
+                  tick={{ fill: '#5f6368', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
-                    border: '1px solid #d8d8d8',
+                    border: '1px solid #dadce0',
                     borderRadius: 8,
                     fontSize: 12,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -225,7 +231,7 @@ export default function AnalysisTab({
                 <Line
                   type="monotone"
                   dataKey="positive"
-                  stroke="#644a40"
+                  stroke="#1a73e8"
                   strokeWidth={2}
                   dot={false}
                   name="Positiv"
@@ -249,13 +255,31 @@ export default function AnalysisTab({
               </LineChart>
             </ResponsiveContainer>
           </div>
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#1a73e8' }} />
+              <span>Positiv</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+              <span>Negativ</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#9ca3af' }} />
+              <span>Neutral</span>
+            </div>
+          </div>
         </div>
 
         {/* Source Breakdown BarChart */}
         <div className="chart-container">
-          <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+          <h3 className="mb-1 text-sm font-semibold text-[#202124]">
             Quellen-Verteilung
           </h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">
+            Verteilung der Erwähnungen nach Plattform. Zeigt, welche Quellen die meisten Treffer liefern.
+          </p>
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -263,17 +287,17 @@ export default function AnalysisTab({
                 layout="vertical"
                 margin={{ top: 5, right: 20, bottom: 5, left: 10 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#efefef" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" horizontal={false} />
                 <XAxis
                   type="number"
-                  tick={{ fill: '#999999', fontSize: 12 }}
+                  tick={{ fill: '#5f6368', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  tick={{ fill: '#343434', fontSize: 12 }}
+                  tick={{ fill: '#202124', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   width={80}
@@ -281,7 +305,7 @@ export default function AnalysisTab({
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#ffffff',
-                    border: '1px solid #d8d8d8',
+                    border: '1px solid #dadce0',
                     borderRadius: 8,
                     fontSize: 12,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -289,13 +313,20 @@ export default function AnalysisTab({
                 />
                 <Bar
                   dataKey="count"
-                  fill="#644a40"
+                  fill="#1a73e8"
                   radius={[0, 6, 6, 0]}
                   barSize={24}
                   name="Erwähnungen"
                 />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#1a73e8' }} />
+              <span>Erwähnungen pro Plattform</span>
+            </div>
           </div>
         </div>
 
@@ -305,7 +336,7 @@ export default function AnalysisTab({
 
       {/* Top Mentions */}
       <div>
-        <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+        <h3 className="mb-4 text-sm font-semibold text-[#202124]">
           Wichtigste Erwähnungen
         </h3>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

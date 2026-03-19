@@ -63,7 +63,7 @@ export function BackgroundPaths({
 
     return (
         <div className="relative min-h-[70vh] w-full flex items-center justify-center overflow-hidden bg-background">
-            <div className="absolute inset-0 opacity-40">
+            <div className="absolute inset-0 opacity-10">
                 <FloatingPaths position={1} />
                 <FloatingPaths position={-1} />
             </div>

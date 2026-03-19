@@ -24,7 +24,7 @@ const platformConfig: Record<
   tiktok: { label: 'TikTok', color: '#00F2EA', icon: Music },
   reddit: { label: 'Reddit', color: '#FF4500', icon: MessageCircle },
   linkedin: { label: 'LinkedIn', color: '#0A66C2', icon: Linkedin },
-  news: { label: 'News', color: '#646464', icon: Newspaper },
+  news: { label: 'News', color: '#5f6368', icon: Newspaper },
 };
 
 interface SourceBadgeProps {
@@ -39,7 +39,7 @@ export default function SourceBadge({ platform, className }: SourceBadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-md bg-[#efefef] px-2.5 py-1 text-xs font-medium text-[#646464]',
+        'inline-flex items-center gap-1.5 rounded-md bg-[#f1f3f4] px-2.5 py-1 text-xs font-medium text-[#5f6368]',
         className,
       )}
     >

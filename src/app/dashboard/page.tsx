@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { mockDashboardData } from "@/data/mock";
+import { useState, useCallback, useEffect } from "react";
 import Header from "@/components/dashboard/Header";
 import SummaryTab from "@/components/dashboard/SummaryTab";
 import CommentList from "@/components/dashboard/CommentList";
 import AnalysisTab from "@/components/dashboard/AnalysisTab";
 import SourcesTab from "@/components/dashboard/SourcesTab";
-import type { Response, Mention, SentimentType } from "@/lib/types";
-import type { ScrapedItem } from "@/lib/scraper/base";
+import type { DashboardData } from "@/lib/types";
+import { Loader2, RefreshCw } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -44,65 +43,60 @@ const sentimentTimeData = [
   { date: "19 Mär", positive: 4, negative: 3, neutral: 3 },
 ];
 
-/** Convert a ScrapedItem from the API into a Mention for the dashboard. */
-function scrapedItemToMention(
-  item: ScrapedItem,
-  index: number,
-  politicianId: string
-): Mention {
-  return {
-    id: `scraped-${item.externalId}`,
-    politicianId,
-    articleId: `art-${item.externalId}`,
-    sourceId: `src-${item.platform}`,
-    platform: item.platform,
-    content: item.content || item.title,
-    author: item.author,
-    authorUrl: item.authorUrl || item.url,
-    sentiment: "neutral" as SentimentType,
-    sentimentScore: 0,
-    isViral: false,
-    engagementCount: item.engagementCount,
-    needsResponse: false,
-    tags: [],
-    createdAt: new Date(item.publishedAt),
-  };
-}
-
-/** Recalculate dashboard stats from mentions. */
-function recalcStats(mentions: Mention[]) {
-  const total = mentions.length;
-  if (total === 0) {
-    return {
-      totalMentions: 0,
-      positivePct: 0,
-      negativePct: 0,
-      neutralPct: 0,
-      needsResponse: 0,
-    };
-  }
-  const positive = mentions.filter((m) => m.sentiment === "positive").length;
-  const negative = mentions.filter((m) => m.sentiment === "negative").length;
-  const neutral = mentions.filter((m) => m.sentiment === "neutral").length;
-  return {
-    totalMentions: total,
-    positivePct: Math.round((positive / total) * 100),
-    negativePct: Math.round((negative / total) * 100),
-    neutralPct: Math.round((neutral / total) * 100),
-    needsResponse: mentions.filter((m) => m.needsResponse).length,
-  };
-}
+const emptyData: DashboardData = {
+  politician: {
+    id: 'default',
+    name: 'Thomas Müller',
+    title: 'Gemeinderat',
+    keywords: ['Müller', 'Gemeinderat', 'Zürich'],
+    constituency: 'Stadt Zürich',
+    sources: [],
+  },
+  mentions: [],
+  responses: {},
+  topics: [],
+  stats: { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0 },
+};
 
 export default function DashboardPage() {
-  const [data, setData] = useState(mockDashboardData);
+  const [data, setData] = useState<DashboardData>(emptyData);
   const [activeTab, setActiveTab] = useState<Tab>("summary");
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isScraping, setIsScraping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [scrapeNotification, setScrapeNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  async function fetchDashboard() {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/dashboard');
+      const result = await res.json();
+      if (result.mentions) {
+        // Parse date strings back to Date objects
+        result.mentions = result.mentions.map((m: any) => ({
+          ...m,
+          createdAt: new Date(m.createdAt),
+        }));
+        result.topics = (result.topics || []).map((t: any) => ({
+          ...t,
+          date: new Date(t.date),
+        }));
+        setData(result);
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const handleGenerateResponse = useCallback(async (mentionId: string) => {
     setIsGenerating(mentionId);
@@ -115,17 +109,7 @@ export default function DashboardPage() {
       const result = await res.json();
 
       if (result.success) {
-        const newResponse: Response = {
-          id: `resp-${mentionId}`,
-          mentionId,
-          generatedText: result.response,
-          improvedText: null,
-          wasCopied: false,
-        };
-        setData((prev) => ({
-          ...prev,
-          responses: { ...prev.responses, [mentionId]: newResponse },
-        }));
+        await fetchDashboard();
       }
     } catch (error) {
       console.error("Fehler beim Generieren:", error);
@@ -145,16 +129,7 @@ export default function DashboardPage() {
       const result = await res.json();
 
       if (result.success) {
-        setData((prev) => ({
-          ...prev,
-          responses: {
-            ...prev.responses,
-            [mentionId]: {
-              ...prev.responses[mentionId],
-              improvedText: result.response,
-            },
-          },
-        }));
+        await fetchDashboard();
       }
     } catch (error) {
       console.error("Fehler beim Verbessern:", error);
@@ -167,54 +142,30 @@ export default function DashboardPage() {
     setIsScraping(true);
     setScrapeNotification(null);
     try {
-      const res = await fetch("/api/scrape", {
-        method: "POST",
-      });
+      const res = await fetch("/api/scrape", { method: "POST" });
       const result = await res.json();
-
-      if (result.success && Array.isArray(result.items)) {
-        const newMentions = result.items.map(
-          (item: ScrapedItem, index: number) =>
-            scrapedItemToMention(item, index, data.politician.id)
-        );
-
-        setData((prev) => {
-          // Deduplicate by id: existing mentions take precedence
-          const existingIds = new Set(prev.mentions.map((m) => m.id));
-          const uniqueNew = newMentions.filter(
-            (m: Mention) => !existingIds.has(m.id)
-          );
-          const merged = [...uniqueNew, ...prev.mentions];
-
-          return {
-            ...prev,
-            mentions: merged,
-            stats: recalcStats(merged),
-          };
-        });
-
-        const addedCount = newMentions.length;
+      if (result.success) {
         setScrapeNotification({
-          message: `${addedCount} neue Artikel gefunden (${(result.durationMs / 1000).toFixed(1)}s)`,
+          message: `${result.newCount} neue Artikel gefunden`,
           type: "success",
         });
+        await fetchDashboard(); // Reload from DB
       } else {
         setScrapeNotification({
-          message: `Fehler: ${result.error ?? "Unbekannter Fehler"}`,
+          message: result.error || "Fehler",
           type: "error",
         });
       }
-    } catch (error) {
-      console.error("Fehler beim Scrapen:", error);
+    } catch {
       setScrapeNotification({
-        message: "Netzwerkfehler beim Scrapen",
+        message: "Netzwerkfehler",
         type: "error",
       });
     } finally {
       setIsScraping(false);
-      setTimeout(() => setScrapeNotification(null), 8000);
+      setTimeout(() => setScrapeNotification(null), 6000);
     }
-  }, [data.politician.id]);
+  }, []);
 
   const handleAnalyze = useCallback(async () => {
     setIsAnalyzing(true);
@@ -228,32 +179,12 @@ export default function DashboardPage() {
       });
       const result = await res.json();
 
-      if (result.success && Array.isArray(result.results)) {
-        setData((prev) => {
-          const updatedMentions = prev.mentions.map((mention, idx) => {
-            const analysis = result.results[idx];
-            if (!analysis) return mention;
-            return {
-              ...mention,
-              sentiment: analysis.sentiment as SentimentType,
-              sentimentScore: analysis.sentimentScore,
-              tags: analysis.tags || mention.tags,
-              needsResponse: analysis.needsResponse ?? mention.needsResponse,
-              isViral: analysis.isViral ?? mention.isViral,
-            };
-          });
-
-          return {
-            ...prev,
-            mentions: updatedMentions,
-            stats: recalcStats(updatedMentions),
-          };
-        });
-
+      if (result.success) {
         setScrapeNotification({
           message: `Sentiment-Analyse abgeschlossen (${result.analyzed} Erwähnungen)`,
           type: "success",
         });
+        await fetchDashboard(); // Reload from DB
       } else {
         setScrapeNotification({
           message: `Analyse-Fehler: ${result.error ?? "Unbekannter Fehler"}`,
@@ -287,7 +218,7 @@ export default function DashboardPage() {
       {/* Scrape / Analyze Notification */}
       {scrapeNotification && (
         <div className="mx-auto max-w-[1400px] px-6 pt-4">
-          <div className="flex items-center justify-between rounded-lg border border-[#d8d8d8] bg-white px-4 py-3 text-sm text-[#343434] shadow-sm">
+          <div className="flex items-center justify-between rounded-lg border border-[#dadce0] bg-white px-4 py-3 text-sm text-[#202124] shadow-sm">
             <div className="flex items-center gap-2">
               <span
                 className={`inline-block h-2 w-2 rounded-full ${
@@ -295,14 +226,14 @@ export default function DashboardPage() {
                     ? "bg-green-500"
                     : scrapeNotification.type === "error"
                       ? "bg-red-500"
-                      : "bg-[#644a40]"
+                      : "bg-[#1a73e8]"
                 }`}
               />
               <span>{scrapeNotification.message}</span>
             </div>
             <button
               onClick={() => setScrapeNotification(null)}
-              className="ml-4 text-[#999999] hover:text-[#343434]"
+              className="ml-4 text-[#5f6368] hover:text-[#202124]"
             >
               &times;
             </button>
@@ -312,8 +243,27 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-[1400px] px-6 py-6">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-32">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-3 text-muted-foreground">Dashboard wird geladen...</span>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && data.mentions.length === 0 && activeTab === "summary" && (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <RefreshCw className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Noch keine Daten</h2>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              Klicken Sie oben auf &quot;Aktualisieren&quot;, um Schweizer Nachrichtenquellen zu durchsuchen.
+            </p>
+          </div>
+        )}
+
         {/* Summary Tab */}
-        {activeTab === "summary" && (
+        {!isLoading && activeTab === "summary" && data.mentions.length > 0 && (
           <SummaryTab
             data={data}
             onGenerateResponse={handleGenerateResponse}
@@ -322,15 +272,18 @@ export default function DashboardPage() {
         )}
 
         {/* Mentions Tab */}
-        {activeTab === "mentions" && (
+        {!isLoading && activeTab === "mentions" && (
           <div className="tab-content-enter space-y-6">
             {/* Charts above mentions */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* Mention Volume */}
               <div className="chart-container">
-                <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+                <h3 className="mb-1 text-sm font-semibold text-[#202124]">
                   Erwähnungs-Volumen
                 </h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">
+                  Anzahl neuer Erwähnungen pro Tag in den letzten 7 Tagen.
+                </p>
                 <div style={{ width: "100%", height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -339,23 +292,23 @@ export default function DashboardPage() {
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
-                        stroke="#efefef"
+                        stroke="#f1f3f4"
                       />
                       <XAxis
                         dataKey="date"
-                        tick={{ fill: "#999999", fontSize: 12 }}
+                        tick={{ fill: "#5f6368", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fill: "#999999", fontSize: 12 }}
+                        tick={{ fill: "#5f6368", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#ffffff",
-                          border: "1px solid #d8d8d8",
+                          border: "1px solid #dadce0",
                           borderRadius: 8,
                           fontSize: 12,
                           boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
@@ -364,22 +317,34 @@ export default function DashboardPage() {
                       <Line
                         type="monotone"
                         dataKey="count"
-                        stroke="#644a40"
+                        stroke="#1a73e8"
                         strokeWidth={2.5}
-                        dot={{ fill: "#644a40", r: 4 }}
+                        dot={{ fill: "#1a73e8", r: 4 }}
                         activeDot={{ r: 6 }}
                         name="Erwähnungen"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+                {/* Legend */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#1a73e8" }} />
+                    <span>Erwähnungen</span>
+                  </div>
+                  <span className="text-[#dadce0]">|</span>
+                  <span>Zeitraum: Letzte 7 Tage</span>
+                </div>
               </div>
 
               {/* Sentiment over time */}
               <div className="chart-container">
-                <h3 className="mb-4 text-sm font-semibold text-[#202020]">
+                <h3 className="mb-1 text-sm font-semibold text-[#202124]">
                   Sentiment über Zeit
                 </h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">
+                  Tägliche Sentiment-Verteilung: Positiv, Negativ und Neutral.
+                </p>
                 <div style={{ width: "100%", height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -388,23 +353,23 @@ export default function DashboardPage() {
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
-                        stroke="#efefef"
+                        stroke="#f1f3f4"
                       />
                       <XAxis
                         dataKey="date"
-                        tick={{ fill: "#999999", fontSize: 12 }}
+                        tick={{ fill: "#5f6368", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fill: "#999999", fontSize: 12 }}
+                        tick={{ fill: "#5f6368", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#ffffff",
-                          border: "1px solid #d8d8d8",
+                          border: "1px solid #dadce0",
                           borderRadius: 8,
                           fontSize: 12,
                           boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
@@ -413,7 +378,7 @@ export default function DashboardPage() {
                       <Line
                         type="monotone"
                         dataKey="positive"
-                        stroke="#644a40"
+                        stroke="#1a73e8"
                         strokeWidth={2}
                         dot={false}
                         name="Positiv"
@@ -437,6 +402,21 @@ export default function DashboardPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+                {/* Legend */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#1a73e8" }} />
+                    <span>Positiv</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#ef4444" }} />
+                    <span>Negativ</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#9ca3af" }} />
+                    <span>Neutral</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -451,7 +431,7 @@ export default function DashboardPage() {
         )}
 
         {/* Analysis Tab */}
-        {activeTab === "analysis" && (
+        {!isLoading && activeTab === "analysis" && (
           <AnalysisTab
             data={data}
             onGenerateResponse={handleGenerateResponse}
@@ -460,13 +440,13 @@ export default function DashboardPage() {
         )}
 
         {/* Sources Tab */}
-        {activeTab === "sources" && <SourcesTab />}
+        {!isLoading && activeTab === "sources" && <SourcesTab />}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#d8d8d8] bg-white">
+      <footer className="border-t border-[#dadce0] bg-white">
         <div
-          className="mx-auto max-w-[1400px] px-6 py-4 text-center text-xs text-[#999999]"
+          className="mx-auto max-w-[1400px] px-6 py-4 text-center text-xs text-[#5f6368]"
           suppressHydrationWarning
         >
           VibeAgent — Politisches Monitoring Dashboard | Letzte Aktualisierung:{" "}

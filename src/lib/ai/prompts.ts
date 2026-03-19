@@ -25,8 +25,9 @@ Berücksichtige dabei:
 - Regionale Kontexte der Pfalz (Ludwigshafen, Frankenthal, Speyer, Neustadt etc.)
 - Politische Tonalität und Ironie in deutschen Social-Media-Beiträgen
 - Ob der Beitrag eine konkrete Beschwerde, Lob oder neutrale Berichterstattung enthält
-- Beiträge mit persönlichen Angriffen oder Falschinformationen als "needsResponse: true" markieren
-- Beiträge mit über 100 Interaktionen oder breiter Teilung als "isViral: true" einschätzen`;
+- Setze "needsResponse: true" NUR wenn der Beitrag den Politiker direkt anspricht, kritisiert oder Falschinformationen über ihn verbreitet. Allgemeine Nachrichtenartikel über Ereignisse benötigen KEINE Antwort.
+- Setze "isViral: true" NUR wenn das Engagement hoch ist (über 500 Interaktionen) UND die Stimmung stark negativ ist (sentimentScore < -0.5). Neutrale oder positive virale Beiträge sind NICHT als isViral zu markieren.
+- Nachrichtenartikel über allgemeine Ereignisse (z.B. Unfälle, Wetter, Sport) die den Politiker nur am Rande erwähnen: needsResponse=false, isViral=false`;
 
 /**
  * Response generation prompt.
@@ -93,6 +94,8 @@ Antworte ausschließlich mit einem JSON-Array im folgenden Format:
 Richtlinien:
 - Fasse ähnliche Erwähnungen zu einem Thema zusammen (z.B. "BASF-Stellenabbau" statt einzelner Beiträge)
 - Berücksichtige regionale Themen der Pfalz (Infrastruktur, BASF, Weinbau, Tourismus etc.)
+- Generiere spezifische politische Themen, nicht generische Kategorien. Statt "Verkehr" sage "Verkehrsberuhigung Langstrasse". Statt "Kritik" sage "Mietpreiskritik". Jedes Thema soll einen konkreten lokalen Bezug haben.
+- Ignoriere Themen die keinen Bezug zur Lokalpolitik haben (z.B. internationale Nachrichten, Sport, Unterhaltung).
 - "hoch" = Thema mit großer öffentlicher Aufmerksamkeit oder Handlungsbedarf
 - "mittel" = relevantes Thema mit moderatem Interesse
 - "niedrig" = Randthema oder Einzelmeinung

@@ -17,7 +17,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = ({ children, variant = "default", className = "", ...props }: ButtonProps) => {
   const base = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
   const variants = {
-    default: "bg-gradient-to-r from-[#644a40] to-[#4a3530] text-white hover:from-[#4a3530] hover:to-[#3a2520]",
+    default: "bg-gradient-to-r from-[#1a73e8] to-[#174ea6] text-white hover:from-[#174ea6] hover:to-[#3a2520]",
     outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
   };
   return (
@@ -41,10 +41,10 @@ const DotMap = () => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   const routes: { start: RoutePoint; end: RoutePoint; color: string }[] = [
-    { start: { x: 100, y: 150, delay: 0 }, end: { x: 200, y: 80, delay: 2 }, color: "#644a40" },
-    { start: { x: 200, y: 80, delay: 2 }, end: { x: 260, y: 120, delay: 4 }, color: "#644a40" },
-    { start: { x: 50, y: 50, delay: 1 }, end: { x: 150, y: 180, delay: 3 }, color: "#644a40" },
-    { start: { x: 280, y: 60, delay: 0.5 }, end: { x: 180, y: 180, delay: 2.5 }, color: "#644a40" },
+    { start: { x: 100, y: 150, delay: 0 }, end: { x: 200, y: 80, delay: 2 }, color: "#1a73e8" },
+    { start: { x: 200, y: 80, delay: 2 }, end: { x: 260, y: 120, delay: 4 }, color: "#1a73e8" },
+    { start: { x: 50, y: 50, delay: 1 }, end: { x: 150, y: 180, delay: 3 }, color: "#1a73e8" },
+    { start: { x: 280, y: 60, delay: 0.5 }, end: { x: 180, y: 180, delay: 2.5 }, color: "#1a73e8" },
   ];
 
   const generateDots = (width: number, height: number) => {
@@ -124,7 +124,7 @@ const DotMap = () => {
 
         ctx!.beginPath();
         ctx!.arc(x, y, 3, 0, Math.PI * 2);
-        ctx!.fillStyle = "#644a40";
+        ctx!.fillStyle = "#1a73e8";
         ctx!.fill();
 
         ctx!.beginPath();
@@ -182,7 +182,7 @@ export default function SignInCard() {
       >
         {/* Left side - Map */}
         <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#ffdfb5]/30 to-[#644a40]/10">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0fe]/30 to-[#1a73e8]/10">
             <DotMap />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
               <motion.div
@@ -191,7 +191,7 @@ export default function SignInCard() {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="mb-6"
               >
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#644a40] to-[#4a3530] flex items-center justify-center shadow-lg">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#1a73e8] to-[#174ea6] flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
               </motion.div>
@@ -199,7 +199,7 @@ export default function SignInCard() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.5 }}
-                className="text-3xl font-bold mb-2 text-center text-[#644a40]"
+                className="text-3xl font-bold mb-2 text-center text-[#1a73e8]"
               >
                 VibeAgent
               </motion.h2>

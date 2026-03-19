@@ -31,11 +31,11 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon: Icon, iconColor, iconBg }: SummaryCardProps) {
   return (
-    <div className="kpi-card rounded-xl border border-[#d8d8d8] bg-white p-5">
+    <div className="kpi-card rounded-xl border border-[#dadce0] bg-white p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-[#646464]">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-[#202020]">{value}</p>
+          <p className="text-sm font-medium text-[#5f6368]">{label}</p>
+          <p className="mt-1 text-3xl font-bold text-[#202124]">{value}</p>
         </div>
         <div
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconBg}`}
@@ -116,15 +116,15 @@ export default function SourcesTab() {
           label="Nachrichtenquellen"
           value={NEWS_SOURCES.length}
           icon={Newspaper}
-          iconColor="#644a40"
-          iconBg="bg-[#ffdfb5]"
+          iconColor="#1a73e8"
+          iconBg="bg-[#e8f0fe]"
         />
         <SummaryCard
           label="Social Media Targets"
           value={SOCIAL_MEDIA_TARGETS.length}
           icon={Share2}
-          iconColor="#644a40"
-          iconBg="bg-[#fff5e6]"
+          iconColor="#1a73e8"
+          iconBg="bg-[#e8f0fe]"
         />
         <SummaryCard
           label="Kantone"
@@ -143,18 +143,18 @@ export default function SourcesTab() {
       </div>
 
       {/* News Sources */}
-      <div className="rounded-xl border border-[#d8d8d8] bg-white">
-        <div className="border-b border-[#d8d8d8] px-6 py-4">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-[#202020]">
-            <Newspaper className="h-5 w-5 text-[#644a40]" />
+      <div className="rounded-xl border border-[#dadce0] bg-white">
+        <div className="border-b border-[#dadce0] px-6 py-4">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-[#202124]">
+            <Newspaper className="h-5 w-5 text-[#1a73e8]" />
             Nachrichtenquellen
           </h3>
-          <p className="mt-1 text-sm text-[#646464]">
+          <p className="mt-1 text-sm text-[#5f6368]">
             {NEWS_SOURCES.length} konfigurierte Quellen nach Region
           </p>
         </div>
 
-        <div className="divide-y divide-[#efefef]">
+        <div className="divide-y divide-[#f1f3f4]">
           {Object.entries(newsByRegion).map(([region, sources]) => (
             <div key={region}>
               <button
@@ -163,15 +163,15 @@ export default function SourcesTab() {
               >
                 <div className="flex items-center gap-2">
                   {expandedRegions.has(region) ? (
-                    <ChevronDown className="h-4 w-4 text-[#999999]" />
+                    <ChevronDown className="h-4 w-4 text-[#5f6368]" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-[#999999]" />
+                    <ChevronRight className="h-4 w-4 text-[#5f6368]" />
                   )}
-                  <span className="text-sm font-medium text-[#343434]">
+                  <span className="text-sm font-medium text-[#202124]">
                     {getRegionLabel(region)}
                   </span>
                 </div>
-                <span className="rounded-full bg-[#efefef] px-2.5 py-0.5 text-xs font-medium text-[#646464]">
+                <span className="rounded-full bg-[#f1f3f4] px-2.5 py-0.5 text-xs font-medium text-[#5f6368]">
                   {sources.length}
                 </span>
               </button>
@@ -180,7 +180,7 @@ export default function SourcesTab() {
                 <div className="bg-[#f9f9f9] px-6 pb-3">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs text-[#999999]">
+                      <tr className="text-left text-xs text-[#5f6368]">
                         <th className="pb-2 font-medium">Name</th>
                         <th className="pb-2 font-medium">Typ</th>
                         <th className="pb-2 font-medium">Sprache</th>
@@ -188,7 +188,7 @@ export default function SourcesTab() {
                         <th className="pb-2 text-center font-medium">Google</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#d8d8d8]">
+                    <tbody className="divide-y divide-[#dadce0]">
                       {sources.map((source) => (
                         <tr key={source.id} className="group">
                           <td className="py-2.5">
@@ -196,32 +196,32 @@ export default function SourcesTab() {
                               href={source.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 font-medium text-[#343434] hover:text-[#644a40]"
+                              className="flex items-center gap-1.5 font-medium text-[#202124] hover:text-[#1a73e8]"
                             >
                               {source.name}
                               <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                             </a>
                           </td>
                           <td className="py-2.5">
-                            <span className="rounded-full bg-[#d8d8d8] px-2 py-0.5 text-xs text-[#646464]">
+                            <span className="rounded-full bg-[#dadce0] px-2 py-0.5 text-xs text-[#5f6368]">
                               {source.type}
                             </span>
                           </td>
-                          <td className="py-2.5 text-[#646464]">
+                          <td className="py-2.5 text-[#5f6368]">
                             {langLabels[source.language] ?? source.language}
                           </td>
                           <td className="py-2.5 text-center">
                             {source.rssFeed ? (
-                              <Rss className="mx-auto h-4 w-4 text-[#644a40]" />
+                              <Rss className="mx-auto h-4 w-4 text-[#1a73e8]" />
                             ) : (
-                              <span className="text-[#b5b5b5]">—</span>
+                              <span className="text-[#9aa0a6]">—</span>
                             )}
                           </td>
                           <td className="py-2.5 text-center">
                             {source.googleNewsProxy ? (
-                              <Globe className="mx-auto h-4 w-4 text-[#644a40]" />
+                              <Globe className="mx-auto h-4 w-4 text-[#1a73e8]" />
                             ) : (
-                              <span className="text-[#b5b5b5]">—</span>
+                              <span className="text-[#9aa0a6]">—</span>
                             )}
                           </td>
                         </tr>
@@ -236,18 +236,18 @@ export default function SourcesTab() {
       </div>
 
       {/* Social Media Targets */}
-      <div className="rounded-xl border border-[#d8d8d8] bg-white">
-        <div className="border-b border-[#d8d8d8] px-6 py-4">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-[#202020]">
-            <Share2 className="h-5 w-5 text-[#644a40]" />
+      <div className="rounded-xl border border-[#dadce0] bg-white">
+        <div className="border-b border-[#dadce0] px-6 py-4">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-[#202124]">
+            <Share2 className="h-5 w-5 text-[#1a73e8]" />
             Social Media Targets
           </h3>
-          <p className="mt-1 text-sm text-[#646464]">
+          <p className="mt-1 text-sm text-[#5f6368]">
             {SOCIAL_MEDIA_TARGETS.length} konfigurierte Targets nach Plattform
           </p>
         </div>
 
-        <div className="divide-y divide-[#efefef]">
+        <div className="divide-y divide-[#f1f3f4]">
           {Object.entries(socialByPlatform).map(([platform, targets]) => (
             <div key={platform}>
               <button
@@ -256,15 +256,15 @@ export default function SourcesTab() {
               >
                 <div className="flex items-center gap-2">
                   {expandedPlatforms.has(platform) ? (
-                    <ChevronDown className="h-4 w-4 text-[#999999]" />
+                    <ChevronDown className="h-4 w-4 text-[#5f6368]" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-[#999999]" />
+                    <ChevronRight className="h-4 w-4 text-[#5f6368]" />
                   )}
-                  <span className="text-sm font-medium capitalize text-[#343434]">
+                  <span className="text-sm font-medium capitalize text-[#202124]">
                     {platform}
                   </span>
                 </div>
-                <span className="rounded-full bg-[#efefef] px-2.5 py-0.5 text-xs font-medium text-[#646464]">
+                <span className="rounded-full bg-[#f1f3f4] px-2.5 py-0.5 text-xs font-medium text-[#5f6368]">
                   {targets.length}
                 </span>
               </button>
@@ -273,14 +273,14 @@ export default function SourcesTab() {
                 <div className="bg-[#f9f9f9] px-6 pb-3">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs text-[#999999]">
+                      <tr className="text-left text-xs text-[#5f6368]">
                         <th className="pb-2 font-medium">Name</th>
                         <th className="pb-2 font-medium">Typ</th>
                         <th className="pb-2 font-medium">Region</th>
                         <th className="pb-2 font-medium">Sprache</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#d8d8d8]">
+                    <tbody className="divide-y divide-[#dadce0]">
                       {targets.map((target) => (
                         <tr key={target.id} className="group">
                           <td className="py-2.5">
@@ -288,23 +288,23 @@ export default function SourcesTab() {
                               href={target.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 font-medium text-[#343434] hover:text-[#644a40]"
+                              className="flex items-center gap-1.5 font-medium text-[#202124] hover:text-[#1a73e8]"
                             >
                               {target.name}
                               <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                             </a>
                           </td>
                           <td className="py-2.5">
-                            <span className="rounded-full bg-[#d8d8d8] px-2 py-0.5 text-xs text-[#646464]">
+                            <span className="rounded-full bg-[#dadce0] px-2 py-0.5 text-xs text-[#5f6368]">
                               {target.type}
                             </span>
                           </td>
-                          <td className="py-2.5 text-[#646464]">
+                          <td className="py-2.5 text-[#5f6368]">
                             {target.region === 'national'
                               ? 'National'
                               : getRegionLabel(target.region)}
                           </td>
-                          <td className="py-2.5 text-[#646464]">
+                          <td className="py-2.5 text-[#5f6368]">
                             {target.language === 'multi'
                               ? 'Mehrsprachig'
                               : langLabels[target.language] ?? target.language}
@@ -324,7 +324,7 @@ export default function SourcesTab() {
       <div className="flex justify-center">
         <Link
           href="/settings"
-          className="flex items-center gap-2 rounded-lg border border-[#d8d8d8] bg-white px-6 py-3 text-sm font-medium text-[#646464] transition-colors hover:border-[#644a40] hover:text-[#644a40]"
+          className="flex items-center gap-2 rounded-lg border border-[#dadce0] bg-white px-6 py-3 text-sm font-medium text-[#5f6368] transition-colors hover:border-[#1a73e8] hover:text-[#1a73e8]"
         >
           <Settings className="h-4 w-4" />
           Quellen konfigurieren

@@ -13,7 +13,12 @@ export default function CrisisAlert({
   mention,
   onGenerateResponse,
 }: CrisisAlertProps) {
-  if (!mention.isViral || mention.sentiment !== 'negative') {
+  if (
+    !mention.isViral ||
+    mention.sentiment !== 'negative' ||
+    mention.sentimentScore >= -0.5 ||
+    mention.engagementCount <= 100
+  ) {
     return null;
   }
 

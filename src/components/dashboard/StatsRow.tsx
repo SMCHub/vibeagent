@@ -24,27 +24,27 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon: Icon, iconColor, iconBg, trend }: StatCardProps) {
   return (
-    <div className="kpi-card rounded-xl border border-[#d8d8d8] bg-white p-5">
+    <div className="kpi-card rounded-xl border border-border bg-card p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-[#646464]">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-[#202020]">{value}</p>
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
           {trend && (
             <div className="mt-2 flex items-center gap-1">
               {trend.isPositive ? (
-                <TrendingUp className="h-3.5 w-3.5 text-[#644a40]" />
+                <TrendingUp className="h-3.5 w-3.5 text-[#34a853]" />
               ) : (
-                <TrendingDown className="h-3.5 w-3.5 text-[#ef4444]" />
+                <TrendingDown className="h-3.5 w-3.5 text-[#ea4335]" />
               )}
               <span
                 className={clsx(
                   'text-xs font-medium',
-                  trend.isPositive ? 'text-[#644a40]' : 'text-[#ef4444]',
+                  trend.isPositive ? 'text-[#34a853]' : 'text-[#ea4335]',
                 )}
               >
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
-              <span className="text-xs text-[#999999]">vs. letzte Woche</span>
+              <span className="text-xs text-muted-foreground">vs. letzte Woche</span>
             </div>
           )}
         </div>
@@ -65,32 +65,32 @@ export default function StatsRow({ stats }: StatsRowProps) {
         label="Erwähnungen"
         value={stats.totalMentions}
         icon={MessageSquare}
-        iconColor="#644a40"
-        iconBg="bg-[#ffdfb5]"
+        iconColor="#1a73e8"
+        iconBg="bg-[#e8f0fe]"
         trend={{ value: 12, isPositive: true }}
       />
       <StatCard
         label="Positiv"
         value={`${stats.positivePct}%`}
         icon={ThumbsUp}
-        iconColor="#644a40"
-        iconBg="bg-[#ffdfb5]"
+        iconColor="#34a853"
+        iconBg="bg-[#e6f4ea]"
         trend={{ value: 8, isPositive: true }}
       />
       <StatCard
         label="Negativ"
         value={`${stats.negativePct}%`}
         icon={ThumbsDown}
-        iconColor="#ef4444"
-        iconBg="bg-red-50"
+        iconColor="#ea4335"
+        iconBg="bg-[#fce8e6]"
         trend={{ value: -3, isPositive: false }}
       />
       <StatCard
         label="Antwort nötig"
         value={stats.needsResponse}
         icon={Reply}
-        iconColor="#f59e0b"
-        iconBg="bg-amber-50"
+        iconColor="#fbbc04"
+        iconBg="bg-[#fef7e0]"
         trend={{ value: 2, isPositive: false }}
       />
     </div>

@@ -77,7 +77,15 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, '/')
-    .replace(/&apos;/g, "'");
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&laquo;/g, '\u00AB')
+    .replace(/&raquo;/g, '\u00BB')
+    .replace(/&hellip;/g, '\u2026')
+    .replace(/&#8230;/g, '\u2026');
 }
 
 /**
@@ -396,11 +404,21 @@ export class RssScraper implements BaseScraper {
       publishedAt = new Date();
     }
 
+    // Cleanup: strip remaining HTML tags, collapse whitespace, trim
+    const cleanTitle = (item.title || '(untitled)')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    const cleanContent = (item.description || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
     return {
       externalId: externalIdFromUrl(item.link),
-      title: item.title || '(untitled)',
+      title: cleanTitle,
       url: item.link,
-      content: item.description || '',
+      content: cleanContent,
       author: item.creator || sourceName,
       authorUrl: '',
       platform: 'news',
@@ -436,9 +454,25 @@ export class RssScraper implements BaseScraper {
     return unique;
   }
 
+  /** Blocklist of irrelevant terms (sports, entertainment, etc.). */
+  private static BLOCKLIST = [
+    'fussball',
+    'champions league',
+    'bundesliga',
+    'tennis',
+    'ski-wm',
+    'eurovision',
+    'hollywood',
+  ];
+
   /**
-   * Keep only items whose title or content matches at least one keyword
-   * (case-insensitive substring match).
+   * Keep only items that are relevant based on keyword matching.
+   *
+   * An article passes if:
+   *  - It matches at least 1 keyword in the title, OR
+   *  - It matches at least 2 keywords in the combined title + content.
+   *
+   * Articles matching any blocklist term are always excluded.
    */
   private filterByKeywords(
     items: ScrapedItem[],
@@ -447,8 +481,33 @@ export class RssScraper implements BaseScraper {
     const lowerKeywords = keywords.map((k) => k.toLowerCase());
 
     return items.filter((item) => {
-      const haystack = `${item.title} ${item.content}`.toLowerCase();
-      return lowerKeywords.some((kw) => haystack.includes(kw));
+      const lowerTitle = item.title.toLowerCase();
+      const lowerContent = item.content.toLowerCase();
+      const haystack = `${lowerTitle} ${lowerContent}`;
+
+      // Blocklist check: skip clearly irrelevant articles
+      if (
+        RssScraper.BLOCKLIST.some((term) => haystack.includes(term))
+      ) {
+        return false;
+      }
+
+      // Count keyword matches in title only
+      const titleMatches = lowerKeywords.filter((kw) =>
+        lowerTitle.includes(kw)
+      ).length;
+
+      // If at least 1 keyword is in the title, accept
+      if (titleMatches >= 1) {
+        return true;
+      }
+
+      // Otherwise require at least 2 keyword matches across title + content
+      const totalMatches = lowerKeywords.filter((kw) =>
+        haystack.includes(kw)
+      ).length;
+
+      return totalMatches >= 2;
     });
   }
 }

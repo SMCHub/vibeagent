@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { Heart, Sparkles, Copy, Check, RefreshCw, MessageSquare } from 'lucide-react';
+import { Heart, Sparkles, Copy, Check, RefreshCw, MessageSquare, ExternalLink, Reply } from 'lucide-react';
 import type { Mention, Response } from '@/lib/types';
 import SourceBadge from './SourceBadge';
 
@@ -37,7 +37,7 @@ const sentimentMeta: Record<
   string,
   { label: string; dotColor: string; textColor: string }
 > = {
-  positive: { label: 'Positiv', dotColor: 'bg-[#644a40]', textColor: 'text-[#644a40]' },
+  positive: { label: 'Positiv', dotColor: 'bg-[#1a73e8]', textColor: 'text-[#1a73e8]' },
   negative: { label: 'Negativ', dotColor: 'bg-[#ef4444]', textColor: 'text-[#ef4444]' },
   neutral: { label: 'Neutral', dotColor: 'bg-[#9ca3af]', textColor: 'text-[#9ca3af]' },
 };
@@ -60,14 +60,36 @@ export default function CommentCard({
   };
 
   return (
-    <div className="rounded-xl border border-[#d8d8d8] bg-white p-5 transition-all hover:border-[#b5b5b5] hover:shadow-md">
-      {/* Top row: source, author, time */}
+    <div className="rounded-xl border border-[#dadce0] bg-white p-5 transition-all hover:border-[#9aa0a6] hover:shadow-md">
+      {/* Top row: source, author, time, original link */}
       <div className="flex flex-wrap items-center gap-2">
         <SourceBadge platform={mention.platform} />
-        <span className="text-sm font-medium text-[#202020]">{mention.author}</span>
-        <span className="text-xs text-[#999999]" suppressHydrationWarning>
+        {mention.authorUrl ? (
+          <a
+            href={mention.authorUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-[#202124] underline decoration-[#dadce0] underline-offset-2 transition-colors hover:text-[#1a73e8] hover:decoration-[#1a73e8]"
+          >
+            {mention.author}
+          </a>
+        ) : (
+          <span className="text-sm font-medium text-[#202124]">{mention.author}</span>
+        )}
+        <span className="text-xs text-[#5f6368]" suppressHydrationWarning>
           {timeAgoDE(new Date(mention.createdAt))}
         </span>
+        {mention.authorUrl && (
+          <a
+            href={mention.authorUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex items-center gap-1 text-xs text-[#5f6368] transition-colors hover:text-[#1a73e8]"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Zum Original →
+          </a>
+        )}
       </div>
 
       {/* Sentiment indicator */}
@@ -82,7 +104,7 @@ export default function CommentCard({
           {mention.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-[#efefef] px-2.5 py-0.5 text-[11px] font-medium text-[#646464]"
+              className="rounded-full bg-[#f1f3f4] px-2.5 py-0.5 text-[11px] font-medium text-[#5f6368]"
             >
               {tag}
             </span>
@@ -91,11 +113,11 @@ export default function CommentCard({
       )}
 
       {/* Content */}
-      <p className="mt-3 text-sm leading-relaxed text-[#343434]">{mention.content}</p>
+      <p className="mt-3 text-sm leading-relaxed text-[#202124]">{mention.content}</p>
 
       {/* Engagement */}
       {mention.engagementCount > 0 && (
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-[#999999]">
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-[#5f6368]">
           <Heart className="h-3.5 w-3.5" />
           <span className="font-medium">
             {mention.engagementCount.toLocaleString('de-DE')}
@@ -106,25 +128,25 @@ export default function CommentCard({
 
       {/* AI Response */}
       {response && (
-        <div className="mt-4 rounded-lg border border-[#d8d8d8] bg-[#f9f9f9] p-4">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#644a40]">
+        <div className="mt-4 rounded-lg border border-[#dadce0] bg-[#f9f9f9] p-4">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1a73e8]">
             <Sparkles className="h-3.5 w-3.5" />
             KI-Antwortvorschlag
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-[#343434]">
+          <p className="mt-2 text-sm leading-relaxed text-[#202124]">
             {response.improvedText ?? response.generatedText}
           </p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               onClick={() => onImproveResponse(mention.id)}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#d8d8d8] px-3 py-1.5 text-xs font-medium text-[#646464] transition-colors hover:border-[#644a40] hover:text-[#644a40]"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#dadce0] px-3 py-1.5 text-xs font-medium text-[#5f6368] transition-colors hover:border-[#1a73e8] hover:text-[#1a73e8]"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Verbessern
             </button>
             <button
               onClick={handleCopy}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#644a40] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#4a3530]"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#1a73e8] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#174ea6]"
             >
               {copied ? (
                 <>
@@ -138,19 +160,45 @@ export default function CommentCard({
                 </>
               )}
             </button>
+            <div className="relative group">
+              <button
+                disabled
+                className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-[#dadce0] px-3 py-1.5 text-xs font-medium text-[#9aa0a6]"
+              >
+                <Reply className="h-3.5 w-3.5" />
+                Direkt antworten
+              </button>
+              <span className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#202124] px-2.5 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                Bald verfügbar — Login erforderlich
+              </span>
+            </div>
           </div>
         </div>
       )}
 
       {/* Generate response CTA */}
       {!response && mention.needsResponse && (
-        <button
-          onClick={() => onGenerateResponse(mention.id)}
-          className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#644a40] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[#4a3530]"
-        >
-          <MessageSquare className="h-3.5 w-3.5" />
-          Antwort generieren
-        </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => onGenerateResponse(mention.id)}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#1a73e8] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[#174ea6]"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Antwort generieren
+          </button>
+          <div className="relative group">
+            <button
+              disabled
+              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-[#dadce0] px-4 py-2 text-xs font-medium text-[#9aa0a6]"
+            >
+              <Reply className="h-3.5 w-3.5" />
+              Direkt antworten
+            </button>
+            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#202124] px-2.5 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+              Bald verfügbar — Login erforderlich
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );

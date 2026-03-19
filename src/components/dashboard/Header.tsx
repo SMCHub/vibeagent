@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, RefreshCw, Loader2, Brain } from 'lucide-react';
+import { Settings, RefreshCw, Loader2, Brain, BarChart3, MessageSquare, LayoutDashboard, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
@@ -15,11 +15,11 @@ interface HeaderProps {
   isAnalyzing: boolean;
 }
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: 'summary', label: 'Übersicht' },
-  { key: 'mentions', label: 'Erwähnungen' },
-  { key: 'analysis', label: 'Analyse' },
-  { key: 'sources', label: 'Quellen' },
+const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
+  { key: 'summary', label: 'Übersicht', icon: LayoutDashboard },
+  { key: 'mentions', label: 'Erwähnungen', icon: MessageSquare },
+  { key: 'analysis', label: 'Analyse', icon: BarChart3 },
+  { key: 'sources', label: 'Quellen', icon: Globe },
 ];
 
 export default function Header({
@@ -31,68 +31,101 @@ export default function Header({
   isAnalyzing,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 border-b border-[#d8d8d8] bg-white shadow-sm">
-      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#644a40]">
-            <span className="text-sm font-bold text-white">V</span>
+    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl">
+      <div className="mx-auto max-w-[1400px] px-6">
+        {/* Top row: Logo + Actions */}
+        <div className="flex items-center justify-between py-3">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-sm">
+              <span className="text-sm font-bold text-primary-foreground">V</span>
+            </div>
+            <span className="text-base font-semibold tracking-tight text-foreground">
+              VibeAgent
+            </span>
+          </Link>
+
+          {/* Actions */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={onScrape}
+              disabled={isScraping}
+              className={clsx(
+                'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+                'text-muted-foreground hover:bg-accent hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+              )}
+              aria-label="Quellen aktualisieren"
+            >
+              {isScraping ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Aktualisieren</span>
+            </button>
+            <button
+              onClick={onAnalyze}
+              disabled={isAnalyzing}
+              className={clsx(
+                'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+                'text-muted-foreground hover:bg-accent hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+              )}
+              aria-label="Sentiment analysieren"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Brain className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Analysieren</span>
+            </button>
+            <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+            <Link
+              href="/settings"
+              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Einstellungen"
+            >
+              <Settings className="h-4.5 w-4.5" />
+            </Link>
           </div>
-          <span className="text-lg font-semibold text-[#202020]">
-            VibeAgent
-          </span>
-        </Link>
+        </div>
 
         {/* Tab Navigation */}
-        <nav className="flex items-center">
-          {tabs.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => onTabChange(key)}
-              className={clsx(
-                'tab-nav-item',
-                activeTab === key && 'active',
-              )}
-            >
-              {label}
-            </button>
-          ))}
+        <nav className="-mb-px flex gap-1" aria-label="Dashboard Navigation">
+          {tabs.map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onTabChange(key)}
+                className={clsx(
+                  'group relative flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-all',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+                  isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon className={clsx('h-4 w-4', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
+                {label}
+                {/* Active indicator */}
+                {isActive && (
+                  <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })}
         </nav>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={onScrape}
-            disabled={isScraping}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#646464] transition-colors hover:bg-[#efefef] hover:text-[#343434] disabled:opacity-50"
-          >
-            {isScraping ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">Aktualisieren</span>
-          </button>
-          <button
-            onClick={onAnalyze}
-            disabled={isAnalyzing}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#646464] transition-colors hover:bg-[#efefef] hover:text-[#343434] disabled:opacity-50"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Brain className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">Analysieren</span>
-          </button>
-          <Link
-            href="/settings"
-            className="rounded-lg p-2 text-[#646464] transition-colors hover:bg-[#efefef] hover:text-[#343434]"
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
-        </div>
       </div>
+      {/* Bottom border */}
+      <div className="h-px bg-border" />
     </header>
   );
 }

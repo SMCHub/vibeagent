@@ -82,49 +82,56 @@ const stats = [
 
 const plans = [
   {
-    name: "Starter",
-    price: "CHF 49",
-    period: "/Monat",
+    name: "Free",
+    description: "Zum Kennenlernen",
+    price: "CHF 0",
+    period: "",
+    priceNote: "14 Tage kostenlos testen",
     features: [
-      "1 Politiker-Profil",
-      "5 Kantone",
-      "News-Monitoring",
-      "Basis-Sentiment",
+      { text: "14 Tage Testzugang", included: true },
+      { text: "1 Keyword", included: true },
+      { text: "1 Kanton", included: true },
+      { text: "News-Monitoring", included: true },
+      { text: "Antwortvorschläge", included: false },
+      { text: "Themen-Radar", included: false },
     ],
-    cta: "Kostenlos testen",
+    cta: "Kostenlos starten",
     ctaLink: "/signup",
     highlighted: false,
   },
   {
-    name: "Professional",
-    price: "CHF 149",
+    name: "Plus",
+    description: "Für aktive Politikerinnen und Politiker",
+    price: "CHF 29",
     period: "/Monat",
-    badge: "Beliebt",
+    priceNote: "",
+    badge: "Empfohlen",
     features: [
-      "3 Politiker-Profile",
-      "Alle 26 Kantone",
-      "News + Social Media",
-      "GPT-4o Analyse",
-      "Antwortvorschläge",
-      "Krisen-Alerts",
+      { text: "1 Keyword", included: true },
+      { text: "1 Kanton", included: true },
+      { text: "News & Social Media", included: true },
+      { text: "Antwortvorschläge", included: true },
+      { text: "Themen-Radar", included: true },
     ],
     cta: "Jetzt starten",
     ctaLink: "/signup",
     highlighted: true,
   },
   {
-    name: "Enterprise",
-    price: "Auf Anfrage",
-    period: "",
+    name: "Pro",
+    description: "Volle Abdeckung für die ganze Schweiz",
+    price: "CHF 79",
+    period: "/Monat",
+    priceNote: "",
     features: [
-      "Unbegrenzte Profile",
-      "Custom Quellen",
-      "API-Zugang",
-      "Dedicated Support",
-      "White-Label Option",
+      { text: "5 Keywords", included: true },
+      { text: "Alle 26 Kantone", included: true },
+      { text: "News & Social Media", included: true },
+      { text: "Antwortvorschläge", included: true },
+      { text: "Themen-Radar", included: true },
     ],
-    cta: "Kontakt aufnehmen",
-    ctaLink: "#kontakt",
+    cta: "Pro wählen",
+    ctaLink: "/signup",
     highlighted: false,
   },
 ];
@@ -160,44 +167,54 @@ const logoData = {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ── Navbar ──────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+      {/* ── Floating Navbar ─────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
+        <nav className="mx-auto flex max-w-4xl items-center justify-between rounded-2xl border border-border/60 bg-card/75 px-5 py-2.5 shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.02] backdrop-blur-xl transition-all duration-300">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-sm">
               <span className="text-sm font-bold text-primary-foreground">V</span>
             </div>
-            <span className="text-lg font-semibold tracking-tight">VibeAgent</span>
+            <span className="text-base font-semibold tracking-tight text-foreground">VibeAgent</span>
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
-            <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Features
-            </a>
-            <a href="#preise" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Preise
-            </a>
-            <a href="#kontakt" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Kontakt
-            </a>
+          {/* Center Navigation */}
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
+            {[
+              { label: "Features", href: "#features" },
+              { label: "Preise", href: "#preise" },
+              { label: "Kontakt", href: "#kontakt" },
+            ].map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="rounded-lg px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/signup"
-              className="rounded-lg border border-primary px-5 py-2.5 text-sm font-medium text-primary transition-all hover:bg-primary/10"
-            >
-              Registrieren
-            </Link>
+          {/* Right Actions */}
+          <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
+              className="hidden rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:inline-flex"
             >
               Anmelden
             </Link>
+            <Link
+              href="/signup"
+              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              Kostenlos starten
+            </Link>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </header>
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-20" />
 
       {/* ── Hero with BackgroundPaths ──────────────────────── */}
       <BackgroundPaths
@@ -274,7 +291,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ────────────────────────────────────────── */}
-      <section id="preise" className="border-y border-border bg-muted px-6 py-24">
+      <section id="preise" className="px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl font-semibold tracking-tight md:text-4xl">
             Einfache, transparente Preise
@@ -283,46 +300,59 @@ export default function LandingPage() {
             Starten Sie kostenlos. Upgraden Sie wenn nötig.
           </p>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-3">
             {plans.map((p) => (
               <div
                 key={p.name}
-                className={`relative flex flex-col rounded-xl border p-8 transition-all ${
+                className={`relative flex flex-col rounded-2xl p-8 transition-all ${
                   p.highlighted
-                    ? "border-primary bg-card shadow-xl shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/30 hover:shadow-lg"
+                    ? "border-2 border-blue-200/60 bg-white/80 backdrop-blur-sm shadow-xl shadow-blue-900/[0.06]"
+                    : "border border-black/[0.06] bg-card hover:shadow-lg hover:shadow-black/[0.04]"
                 }`}
               >
                 {p.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground">
+                  <span className="absolute -top-3.5 left-6 rounded-full bg-blue-500/90 px-3.5 py-1 text-xs font-semibold uppercase tracking-wide text-white">
                     {p.badge}
                   </span>
                 )}
 
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  <div className="mt-3">
-                    <span className="text-3xl font-bold">{p.price}</span>
-                    {p.period && (
-                      <span className="text-sm text-muted-foreground">{p.period}</span>
-                    )}
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">{p.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
                 </div>
+
+                <div className="mt-6">
+                  <span className="text-4xl font-extrabold tracking-tight text-foreground">{p.price}</span>
+                  {p.period && (
+                    <span className="text-base text-muted-foreground">{p.period}</span>
+                  )}
+                  {p.priceNote && (
+                    <p className="mt-1 text-xs text-muted-foreground">{p.priceNote}</p>
+                  )}
+                </div>
+
+                <div className={`my-6 h-px ${p.highlighted ? "bg-blue-100/80" : "bg-black/[0.06]"}`} />
 
                 <ul className="mb-8 flex-1 space-y-3">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
-                      {f}
+                    <li key={f.text} className="flex items-start gap-3 text-sm">
+                      {f.included ? (
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
+                      ) : (
+                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-foreground/20">—</span>
+                      )}
+                      <span className={f.included ? "font-medium text-foreground" : "text-muted-foreground"}>
+                        {f.text}
+                      </span>
                     </li>
                   ))}
                 </ul>
 
                 <Link
                   href={p.ctaLink}
-                  className={`block rounded-lg py-3 text-center text-sm font-medium transition-all ${
+                  className={`block w-full rounded-xl px-7 py-3 text-center text-base font-medium transition-all ${
                     p.highlighted
-                      ? "bg-primary text-primary-foreground hover:opacity-90"
+                      ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90"
                       : "border border-border text-foreground hover:bg-accent"
                   }`}
                 >

@@ -333,10 +333,10 @@ export default function SettingsPage() {
   }
 
   const inputClasses =
-    'w-full bg-white border border-[#dadce0] text-[#202124] rounded-lg p-2.5 text-sm placeholder-[#80868b] focus:border-[#644a40] focus:ring-1 focus:ring-[#644a40] outline-none transition-colors'
+    'w-full bg-white border border-[#dadce0] text-[#202124] rounded-lg p-2.5 text-sm placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors'
 
   const selectClasses =
-    'w-full bg-white border border-[#dadce0] text-[#202124] rounded-lg p-2.5 text-sm focus:border-[#644a40] focus:ring-1 focus:ring-[#644a40] outline-none transition-colors appearance-none cursor-pointer'
+    'w-full bg-white border border-[#dadce0] text-[#202124] rounded-lg p-2.5 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors appearance-none cursor-pointer'
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#202124]">
@@ -375,8 +375,8 @@ export default function SettingsPage() {
           {/* ── Section 1: Politiker-Profil ────────────────────────────────── */}
           <section className="rounded-xl border border-[#dadce0] bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fff5e6]">
-                <User className="h-5 w-5 text-[#644a40]" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e8f0fe]">
+                <User className="h-5 w-5 text-[#1a73e8]" />
               </div>
               <div>
                 <h2 className="text-base font-semibold text-[#202124]">Politiker-Profil</h2>
@@ -473,7 +473,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <div className="ml-auto">
-                <span className="rounded-full bg-[#ffdfb5] px-3 py-1 text-xs font-medium text-[#644a40]">
+                <span className="rounded-full bg-[#e8f0fe] px-3 py-1 text-xs font-medium text-[#1a73e8]">
                   {selectedCantons.size} von 26 Kantone
                 </span>
               </div>
@@ -495,7 +495,7 @@ export default function SettingsPage() {
                         onClick={() => selectRegion(region.regionCodes)}
                         className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                           allSelected
-                            ? 'bg-[#644a40] text-white'
+                            ? 'bg-[#1a73e8] text-white'
                             : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed]'
                         }`}
                       >
@@ -512,14 +512,14 @@ export default function SettingsPage() {
                             onClick={() => toggleCanton(canton.code)}
                             className={`group relative flex items-center gap-2 rounded-lg border p-2.5 text-left text-sm transition-all ${
                               isSelected
-                                ? 'border-[#644a40] bg-[#ffdfb5] text-[#644a40]'
+                                ? 'border-[#1a73e8] bg-[#e8f0fe] text-[#1a73e8]'
                                 : 'border-[#dadce0] bg-[#f8f9fa] text-[#5f6368] hover:border-[#bdc1c6] hover:bg-white'
                             }`}
                           >
                             <span
                               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
                                 isSelected
-                                  ? 'bg-[#644a40] text-white'
+                                  ? 'bg-[#1a73e8] text-white'
                                   : 'bg-white text-[#5f6368] border border-[#dadce0]'
                               }`}
                             >
@@ -721,7 +721,7 @@ export default function SettingsPage() {
                       aria-checked={platform.enabled}
                       onClick={() => togglePlatform(platform.id)}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        platform.enabled ? 'bg-[#644a40]' : 'bg-[#dadce0]'
+                        platform.enabled ? 'bg-[#1a73e8]' : 'bg-[#dadce0]'
                       }`}
                     >
                       <span
@@ -740,7 +740,7 @@ export default function SettingsPage() {
                         value={platform.watchedAccounts}
                         onChange={(e) => updateWatchedAccounts(platform.id, e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-[#dadce0] bg-[#f8f9fa] p-2 text-xs text-[#202124] placeholder-[#80868b] focus:border-[#644a40] focus:ring-1 focus:ring-[#644a40] outline-none transition-colors"
+                        className="w-full rounded-lg border border-[#dadce0] bg-[#f8f9fa] p-2 text-xs text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors"
                         placeholder="@accounts, #hashtags (kommagetrennt)"
                       />
                     </div>
@@ -794,7 +794,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={handleSave}
-              className="flex items-center gap-2 rounded-full bg-[#644a40] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#1765cc] focus:outline-none focus:ring-2 focus:ring-[#644a40] focus:ring-offset-2 focus:ring-offset-[#f8f9fa]"
+              className="flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#1765cc] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 focus:ring-offset-[#f8f9fa]"
             >
               <Save className="h-4 w-4" />
               Speichern

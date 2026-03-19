@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { RssScraper } from '@/lib/scraper/rss';
+import { insertMention, getMentionCount } from '@/lib/db/helpers';
 
 const DEFAULT_KEYWORDS = [
   'Müller',
@@ -14,10 +15,12 @@ const DEFAULT_KEYWORDS = [
 const SCRAPE_TIMEOUT_MS = 90_000;
 
 export async function GET() {
+  const count = getMentionCount();
   return NextResponse.json({
     status: 'ready',
     sources: 'Swiss news sources (65+ newspapers, 26 canton geo-feeds)',
     method: 'POST to trigger scraping',
+    mentionsInDb: count,
   });
 }
 
@@ -42,10 +45,47 @@ export async function POST() {
 
     const elapsed = Date.now() - startTime;
 
+    // Save each scraped item to the database
+    let newCount = 0;
+    for (const item of items) {
+      // Convert publishedAt to ISO string, handling both Date objects and strings
+      let createdAt: string;
+      if (item.publishedAt instanceof Date) {
+        createdAt = item.publishedAt.toISOString();
+      } else if (typeof item.publishedAt === 'string') {
+        createdAt = new Date(item.publishedAt).toISOString();
+      } else {
+        createdAt = new Date().toISOString();
+      }
+
+      const result = insertMention({
+        id: `rss-${item.externalId}`,
+        sourceId: `src-${item.platform}`,
+        platform: item.platform,
+        title: item.title,
+        url: item.url,
+        content: item.content,
+        author: item.author,
+        authorUrl: item.authorUrl,
+        engagementCount: item.engagementCount,
+        createdAt,
+      });
+
+      // insertMention uses onConflictDoNothing -- check if a row was actually inserted
+      if (result.changes > 0) {
+        newCount++;
+      }
+    }
+
+    // Return count and a few sample titles instead of the full items array
+    const sampleTitles = items.slice(0, 5).map((item) => item.title);
+
     return NextResponse.json({
       success: true,
-      items,
-      count: items.length,
+      totalScraped: items.length,
+      newItems: newCount,
+      duplicatesSkipped: items.length - newCount,
+      sampleTitles,
       durationMs: elapsed,
     });
   } catch (error) {

@@ -1,21 +1,44 @@
-import { NextResponse } from 'next/server'
-import { openai } from '@/lib/ai/client'
-import { STRATEGY_SYSTEM_PROMPT } from '@/lib/ai/prompts'
-import { mockDashboardData } from '@/data/mock'
+import { NextResponse } from 'next/server';
+import { openai } from '@/lib/ai/client';
+import { STRATEGY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
+import { getAllMentions, getAllTopics, getDashboardStats } from '@/lib/db/helpers';
 
 export async function POST() {
   try {
-    const { mentions, topics, stats } = mockDashboardData
+    const mentions = getAllMentions();
+    const topics = getAllTopics();
+    const stats = getDashboardStats();
 
-    const topicSummary = topics
-      .map((t) => `- ${t.name} (Wichtigkeit: ${t.importance}, Trend: ${t.trend}, Erwähnungen: ${t.mentionCount})`)
-      .join('\n')
+    // If the DB is empty, ask the user to scrape first
+    if (mentions.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Keine Daten in der Datenbank. Bitte zuerst Erwähnungen scrapen (/api/scrape) und analysieren (/api/analyze).',
+        },
+        { status: 400 },
+      );
+    }
+
+    const topicSummary =
+      topics.length > 0
+        ? topics
+            .map(
+              (t) =>
+                `- ${t.name} (Wichtigkeit: ${t.importance}, Trend: ${t.trend}, Erwähnungen: ${t.mentionCount})`,
+            )
+            .join('\n')
+        : '(Keine Themen extrahiert -- bitte zuerst /api/analyze ausführen)';
 
     const mentionSummary = mentions
-      .map((m) => `- [${m.platform}] ${m.sentiment} (Score: ${m.sentimentScore}): "${m.content.slice(0, 150)}..."`)
-      .join('\n')
+      .map(
+        (m) =>
+          `- [${m.platform}] ${m.sentiment} (Score: ${m.sentimentScore}): "${m.content.slice(0, 150)}..."`,
+      )
+      .join('\n');
 
-    const statsOverview = `Gesamt: ${stats.totalMentions} Erwähnungen | Positiv: ${stats.positivePct}% | Negativ: ${stats.negativePct}% | Neutral: ${stats.neutralPct}% | Antwort nötig: ${stats.needsResponse}`
+    const statsOverview = `Gesamt: ${stats.totalMentions} Erwähnungen | Positiv: ${stats.positivePct}% | Negativ: ${stats.negativePct}% | Neutral: ${stats.neutralPct}% | Antwort nötig: ${stats.needsResponse}`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -27,25 +50,26 @@ export async function POST() {
         },
       ],
       temperature: 0.7,
-    })
+    });
 
-    const strategy = response.choices[0]?.message?.content
+    const strategy = response.choices[0]?.message?.content;
 
     if (!strategy) {
       return NextResponse.json(
         { success: false, error: 'Keine Strategie vom KI-Modell generiert' },
         { status: 500 },
-      )
+      );
     }
 
     return NextResponse.json({
       success: true,
       strategy,
-    })
+    });
   } catch (error) {
+    console.error('[/api/strategy] Error:', error);
     return NextResponse.json(
       { success: false, error: String(error) },
       { status: 500 },
-    )
+    );
   }
 }

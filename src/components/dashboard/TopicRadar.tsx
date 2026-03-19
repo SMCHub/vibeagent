@@ -18,9 +18,9 @@ interface TopicRadarProps {
 }
 
 const importanceColor: Record<Importance, string> = {
-  hoch: '#644a40',
-  mittel: '#f59e0b',
-  niedrig: '#d8d8d8',
+  hoch: '#4285f4',
+  mittel: '#fbbc04',
+  niedrig: '#dadce0',
 };
 
 const trendArrow: Record<string, string> = {
@@ -38,10 +38,13 @@ export default function TopicRadar({ topics }: TopicRadarProps) {
 
   return (
     <div className="chart-container">
-      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#202020]">
-        <BarChart3 className="h-4 w-4 text-[#646464]" />
+      <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-[#202124]">
+        <BarChart3 className="h-4 w-4 text-[#5f6368]" />
         Themen-Radar
       </h3>
+      <p className="text-xs text-muted-foreground mt-1 mb-3">
+        Zeigt die am häufigsten erwähnten Themen der letzten 7 Tage. Die Balkenlänge entspricht der Anzahl Erwähnungen.
+      </p>
 
       <div style={{ width: '100%', height: topics.length * 40 + 24 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -50,17 +53,17 @@ export default function TopicRadar({ topics }: TopicRadarProps) {
             layout="vertical"
             margin={{ top: 0, right: 12, bottom: 0, left: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#efefef" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" horizontal={false} />
             <XAxis
               type="number"
-              tick={{ fill: '#999999', fontSize: 12 }}
+              tick={{ fill: '#5f6368', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey="name"
-              tick={{ fill: '#343434', fontSize: 12 }}
+              tick={{ fill: '#202124', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               width={160}
@@ -69,13 +72,13 @@ export default function TopicRadar({ topics }: TopicRadarProps) {
               cursor={{ fill: 'rgba(0,0,0,0.03)' }}
               contentStyle={{
                 backgroundColor: '#ffffff',
-                border: '1px solid #d8d8d8',
+                border: '1px solid #dadce0',
                 borderRadius: 8,
-                color: '#343434',
+                color: '#202124',
                 fontSize: 12,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
               }}
-              labelStyle={{ color: '#202020', fontWeight: 600 }}
+              labelStyle={{ color: '#202124', fontWeight: 600 }}
             />
             <Bar dataKey="mentionCount" radius={[0, 6, 6, 0]} barSize={20} name="Erwähnungen">
               {data.map((entry, idx) => (
@@ -87,6 +90,32 @@ export default function TopicRadar({ topics }: TopicRadarProps) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mt-3">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#4285f4' }} />
+          <span>Hohe Wichtigkeit</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#fbbc04' }} />
+          <span>Mittlere Wichtigkeit</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#dadce0' }} />
+          <span>Niedrige Wichtigkeit</span>
+        </div>
+        <span className="mx-1 text-[#dadce0]">|</span>
+        <div className="flex items-center gap-1.5">
+          <span>↑ Steigend</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span>→ Stabil</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span>↓ Fallend</span>
+        </div>
       </div>
     </div>
   );
