@@ -1,58 +1,58 @@
-import { db, rawClient } from './index';
-import { mentions, responses, topics } from './schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { rawClient } from './index';
 import type { Mention, Response, Topic, DashboardData, SentimentType, Importance, Trend, Platform } from '@/lib/types';
 
-function rowToMention(row: typeof mentions.$inferSelect): Mention {
+type Row = Record<string, unknown>;
+
+function rowToMention(row: Row): Mention {
   return {
-    id: row.id,
-    politicianId: row.politicianId,
-    articleId: row.sourceId,
-    sourceId: row.sourceId,
-    platform: row.platform as Platform,
-    content: row.content,
-    author: row.author,
-    authorUrl: row.authorUrl,
-    sentiment: row.sentiment as SentimentType,
-    sentimentScore: row.sentimentScore,
-    isViral: Boolean(row.isViral),
-    engagementCount: row.engagementCount,
-    needsResponse: Boolean(row.needsResponse),
-    tags: JSON.parse(row.tags),
-    createdAt: new Date(row.createdAt),
+    id: String(row.id),
+    politicianId: String(row.politician_id),
+    articleId: String(row.source_id),
+    sourceId: String(row.source_id),
+    platform: String(row.platform) as Platform,
+    content: String(row.content),
+    author: String(row.author),
+    authorUrl: String(row.author_url ?? ''),
+    sentiment: String(row.sentiment) as SentimentType,
+    sentimentScore: Number(row.sentiment_score),
+    isViral: Boolean(row.is_viral),
+    engagementCount: Number(row.engagement_count),
+    needsResponse: Boolean(row.needs_response),
+    tags: JSON.parse(String(row.tags || '[]')),
+    createdAt: new Date(String(row.created_at)),
   };
 }
 
-function rowToResponse(row: typeof responses.$inferSelect): Response {
+function rowToResponse(row: Row): Response {
   return {
-    id: row.id,
-    mentionId: row.mentionId,
-    generatedText: row.generatedText,
-    improvedText: row.improvedText,
-    wasCopied: Boolean(row.wasCopied),
+    id: String(row.id),
+    mentionId: String(row.mention_id),
+    generatedText: String(row.generated_text),
+    improvedText: row.improved_text ? String(row.improved_text) : null,
+    wasCopied: Boolean(row.was_copied),
   };
 }
 
-function rowToTopic(row: typeof topics.$inferSelect): Topic {
+function rowToTopic(row: Row): Topic {
   return {
-    id: row.id,
-    politicianId: row.politicianId,
-    name: row.name,
-    importance: row.importance as Importance,
-    mentionCount: row.mentionCount,
-    trend: row.trend as Trend,
-    date: new Date(row.date),
+    id: String(row.id),
+    politicianId: String(row.politician_id),
+    name: String(row.name),
+    importance: String(row.importance) as Importance,
+    mentionCount: Number(row.mention_count),
+    trend: String(row.trend) as Trend,
+    date: new Date(String(row.date)),
   };
 }
 
 export async function getAllMentions(): Promise<Mention[]> {
-  const rows = await db.select().from(mentions).orderBy(desc(mentions.createdAt));
-  return rows.map(rowToMention);
+  const result = await rawClient.execute('SELECT * FROM mentions ORDER BY created_at DESC');
+  return result.rows.map(rowToMention);
 }
 
 export async function getMentionById(id: string): Promise<Mention | null> {
-  const rows = await db.select().from(mentions).where(eq(mentions.id, id));
-  return rows[0] ? rowToMention(rows[0]) : null;
+  const result = await rawClient.execute({ sql: 'SELECT * FROM mentions WHERE id = ?', args: [id] });
+  return result.rows[0] ? rowToMention(result.rows[0]) : null;
 }
 
 export async function insertMention(mention: {
@@ -67,21 +67,15 @@ export async function insertMention(mention: {
   engagementCount: number;
   createdAt: string;
 }) {
-  // Check if already exists first
-  const existing = await db.select({ id: mentions.id }).from(mentions).where(eq(mentions.id, mention.id));
-  if (existing.length > 0) {
-    return { rowsAffected: 0 };
-  }
-  await db.insert(mentions).values({
-    ...mention,
-    politicianId: 'default',
-    sentiment: 'neutral',
-    sentimentScore: 0,
-    isViral: 0,
-    needsResponse: 0,
-    tags: '[]',
+  return rawClient.execute({
+    sql: 'INSERT OR IGNORE INTO mentions (id, politician_id, source_id, platform, title, url, content, author, author_url, sentiment, sentiment_score, is_viral, engagement_count, needs_response, tags, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [
+      mention.id, 'default', mention.sourceId, mention.platform,
+      mention.title, mention.url, mention.content, mention.author,
+      mention.authorUrl, 'neutral', 0, 0, mention.engagementCount,
+      0, '[]', mention.createdAt
+    ],
   });
-  return { rowsAffected: 1 };
 }
 
 export async function updateMentionSentiment(id: string, data: {
@@ -91,27 +85,25 @@ export async function updateMentionSentiment(id: string, data: {
   needsResponse: boolean;
   isViral: boolean;
 }) {
-  return db.update(mentions).set({
-    sentiment: data.sentiment,
-    sentimentScore: data.sentimentScore,
-    tags: JSON.stringify(data.tags),
-    needsResponse: data.needsResponse ? 1 : 0,
-    isViral: data.isViral ? 1 : 0,
-  }).where(eq(mentions.id, id));
+  return rawClient.execute({
+    sql: 'UPDATE mentions SET sentiment = ?, sentiment_score = ?, tags = ?, needs_response = ?, is_viral = ? WHERE id = ?',
+    args: [data.sentiment, data.sentimentScore, JSON.stringify(data.tags), data.needsResponse ? 1 : 0, data.isViral ? 1 : 0, id],
+  });
 }
 
 export async function getAllResponses(): Promise<Record<string, Response>> {
-  const rows = await db.select().from(responses);
+  const result = await rawClient.execute('SELECT * FROM responses');
   const map: Record<string, Response> = {};
-  for (const row of rows) {
-    map[row.mentionId] = rowToResponse(row);
+  for (const row of result.rows) {
+    const r = rowToResponse(row);
+    map[r.mentionId] = r;
   }
   return map;
 }
 
 export async function getResponseByMentionId(mentionId: string): Promise<Response | null> {
-  const rows = await db.select().from(responses).where(eq(responses.mentionId, mentionId));
-  return rows[0] ? rowToResponse(rows[0]) : null;
+  const result = await rawClient.execute({ sql: 'SELECT * FROM responses WHERE mention_id = ?', args: [mentionId] });
+  return result.rows[0] ? rowToResponse(result.rows[0]) : null;
 }
 
 export async function insertResponse(data: {
@@ -119,43 +111,44 @@ export async function insertResponse(data: {
   mentionId: string;
   generatedText: string;
 }) {
-  return db.insert(responses).values({
-    ...data,
-    improvedText: null,
-    wasCopied: 0,
-    createdAt: new Date().toISOString(),
-  }).onConflictDoNothing();
+  return rawClient.execute({
+    sql: 'INSERT OR IGNORE INTO responses (id, mention_id, generated_text, improved_text, was_copied, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    args: [data.id, data.mentionId, data.generatedText, null, 0, new Date().toISOString()],
+  });
 }
 
 export async function updateResponseImproved(mentionId: string, improvedText: string) {
-  return db.update(responses).set({ improvedText }).where(eq(responses.mentionId, mentionId));
+  return rawClient.execute({
+    sql: 'UPDATE responses SET improved_text = ? WHERE mention_id = ?',
+    args: [improvedText, mentionId],
+  });
 }
 
 export async function getAllTopics(): Promise<Topic[]> {
-  const rows = await db.select().from(topics).orderBy(desc(topics.mentionCount));
-  return rows.map(rowToTopic);
+  const result = await rawClient.execute('SELECT * FROM topics ORDER BY mention_count DESC');
+  return result.rows.map(rowToTopic);
 }
 
 export async function replaceTopics(newTopics: { id: string; name: string; importance: string; mentionCount: number; trend: string; }[]) {
-  await db.delete(topics);
+  await rawClient.execute('DELETE FROM topics');
   for (const t of newTopics) {
-    await db.insert(topics).values({
-      ...t,
-      politicianId: 'default',
-      date: new Date().toISOString(),
+    await rawClient.execute({
+      sql: 'INSERT INTO topics (id, politician_id, name, importance, mention_count, trend, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      args: [t.id, 'default', t.name, t.importance, t.mentionCount, t.trend, new Date().toISOString()],
     });
   }
 }
 
 export async function getDashboardStats() {
-  const all = await db.select().from(mentions);
+  const result = await rawClient.execute('SELECT sentiment, needs_response FROM mentions');
+  const all = result.rows;
   const total = all.length;
   if (total === 0) return { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0 };
 
   const positive = all.filter(m => m.sentiment === 'positive').length;
   const negative = all.filter(m => m.sentiment === 'negative').length;
   const neutral = all.filter(m => m.sentiment === 'neutral').length;
-  const needsResponse = all.filter(m => m.needsResponse).length;
+  const needsResponse = all.filter(m => m.needs_response).length;
 
   return {
     totalMentions: total,
@@ -184,6 +177,6 @@ export async function getDashboardData(): Promise<DashboardData> {
 }
 
 export async function getMentionCount(): Promise<number> {
-  const result = await db.select({ count: sql<number>`count(*)` }).from(mentions);
-  return result[0]?.count ?? 0;
+  const result = await rawClient.execute('SELECT count(*) as cnt FROM mentions');
+  return Number(result.rows[0]?.cnt ?? 0);
 }
