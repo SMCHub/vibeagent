@@ -47,6 +47,7 @@ export async function POST() {
 
     // Save each scraped item to the database
     let newCount = 0;
+    let firstError = '';
     for (const item of items) {
       // Convert publishedAt to ISO string, handling both Date objects and strings
       let createdAt: string;
@@ -74,8 +75,10 @@ export async function POST() {
         if (Number(result.rowsAffected) > 0) {
           newCount++;
         }
-      } catch {
-        // Duplicate or insert error — skip silently
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[Scrape] Insert error for', item.externalId, ':', msg);
+        if (!firstError) firstError = msg;
       }
     }
 
@@ -89,6 +92,7 @@ export async function POST() {
       duplicatesSkipped: items.length - newCount,
       sampleTitles,
       durationMs: elapsed,
+      ...(firstError ? { debugError: firstError } : {}),
     });
   } catch (error) {
     const elapsed = Date.now() - startTime;
