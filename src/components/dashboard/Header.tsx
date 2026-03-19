@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, RefreshCw, Loader2 } from 'lucide-react';
+import { Settings, RefreshCw, Loader2, Brain } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
@@ -11,6 +11,8 @@ interface HeaderProps {
   onTabChange: (tab: Tab) => void;
   onScrape: () => void;
   isScraping: boolean;
+  onAnalyze: () => void;
+  isAnalyzing: boolean;
 }
 
 const tabs: { key: Tab; label: string }[] = [
@@ -25,6 +27,8 @@ export default function Header({
   onTabChange,
   onScrape,
   isScraping,
+  onAnalyze,
+  isAnalyzing,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-[#d8d8d8] bg-white shadow-sm">
@@ -68,6 +72,18 @@ export default function Header({
               <RefreshCw className="h-4 w-4" />
             )}
             <span className="hidden sm:inline">Aktualisieren</span>
+          </button>
+          <button
+            onClick={onAnalyze}
+            disabled={isAnalyzing}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[#646464] transition-colors hover:bg-[#efefef] hover:text-[#343434] disabled:opacity-50"
+          >
+            {isAnalyzing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">Analysieren</span>
           </button>
           <Link
             href="/settings"

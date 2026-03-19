@@ -34,6 +34,15 @@ const Input = ({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   />
 );
 
+const Select = ({ className = "", children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) => (
+  <select
+    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    {...props}
+  >
+    {children}
+  </select>
+);
+
 type RoutePoint = { x: number; y: number; delay: number };
 
 const DotMap = () => {
@@ -160,10 +169,56 @@ const DotMap = () => {
   );
 };
 
-export default function SignInCard() {
+const SWISS_CANTONS = [
+  { value: "", label: "Kanton auswählen" },
+  { value: "AG", label: "AG - Aargau" },
+  { value: "AI", label: "AI - Appenzell Innerrhoden" },
+  { value: "AR", label: "AR - Appenzell Ausserrhoden" },
+  { value: "BE", label: "BE - Bern" },
+  { value: "BL", label: "BL - Basel-Landschaft" },
+  { value: "BS", label: "BS - Basel-Stadt" },
+  { value: "FR", label: "FR - Freiburg" },
+  { value: "GE", label: "GE - Genf" },
+  { value: "GL", label: "GL - Glarus" },
+  { value: "GR", label: "GR - Graubünden" },
+  { value: "JU", label: "JU - Jura" },
+  { value: "LU", label: "LU - Luzern" },
+  { value: "NE", label: "NE - Neuenburg" },
+  { value: "NW", label: "NW - Nidwalden" },
+  { value: "OW", label: "OW - Obwalden" },
+  { value: "SG", label: "SG - St. Gallen" },
+  { value: "SH", label: "SH - Schaffhausen" },
+  { value: "SO", label: "SO - Solothurn" },
+  { value: "SZ", label: "SZ - Schwyz" },
+  { value: "TG", label: "TG - Thurgau" },
+  { value: "TI", label: "TI - Tessin" },
+  { value: "UR", label: "UR - Uri" },
+  { value: "VD", label: "VD - Waadt" },
+  { value: "VS", label: "VS - Wallis" },
+  { value: "ZG", label: "ZG - Zug" },
+  { value: "ZH", label: "ZH - Zürich" },
+];
+
+const ROLES = [
+  { value: "", label: "Rolle auswählen" },
+  { value: "gemeinderat", label: "Gemeinderat" },
+  { value: "kantonsrat", label: "Kantonsrat" },
+  { value: "nationalrat", label: "Nationalrat" },
+  { value: "staenderat", label: "Ständerat" },
+  { value: "stadtrat", label: "Stadtrat" },
+  { value: "andere", label: "Andere" },
+];
+
+export default function SignUpCard() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [canton, setCanton] = useState("");
+  const [role, setRole] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
@@ -178,10 +233,10 @@ export default function SignInCard() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl overflow-hidden rounded-2xl flex bg-card shadow-xl border border-border"
+        className="w-full max-w-5xl overflow-hidden rounded-2xl flex bg-card shadow-xl border border-border"
       >
         {/* Left side - Map */}
-        <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-border">
+        <div className="hidden md:block w-5/12 min-h-[700px] relative overflow-hidden border-r border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-[#ffdfb5]/30 to-[#644a40]/10">
             <DotMap />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
@@ -209,19 +264,19 @@ export default function SignInCard() {
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="text-sm text-center text-muted-foreground max-w-xs"
               >
-                Melden Sie sich an, um Ihr politisches Monitoring-Dashboard zu nutzen und alle Schweizer Medien im Blick zu behalten.
+                Erstellen Sie Ihr Konto und überwachen Sie ab sofort alle Schweizer Medien und Social-Media-Plattformen in Ihrem Wahlkreis.
               </motion.p>
             </div>
           </div>
         </div>
 
         {/* Right side - Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center bg-card">
+        <div className="w-full md:w-7/12 p-8 md:p-10 flex flex-col justify-center bg-card">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-foreground">Willkommen zurück</h1>
-            <p className="text-muted-foreground mb-8">Melden Sie sich in Ihrem Konto an</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-foreground">Konto erstellen</h1>
+            <p className="text-muted-foreground mb-6">Registrieren Sie sich für Ihr Monitoring-Dashboard</p>
 
-            <div className="mb-6">
+            <div className="mb-5">
               <button
                 className="w-full flex items-center justify-center gap-2 bg-muted border border-border rounded-lg p-3 hover:bg-accent transition-all duration-300 text-foreground shadow-sm"
                 onClick={() => router.push("/dashboard")}
@@ -233,11 +288,11 @@ export default function SignInCard() {
                   <path fill="#FBBC05" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   <path fill="#EA4335" d="M1 1h22v22H1z" fillOpacity="0" />
                 </svg>
-                <span>Mit Google anmelden</span>
+                <span>Mit Google registrieren</span>
               </button>
             </div>
 
-            <div className="relative my-6">
+            <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border"></div>
               </div>
@@ -246,7 +301,38 @@ export default function SignInCard() {
               </div>
             </div>
 
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-foreground mb-1">
+                    Vorname <span className="text-primary">*</span>
+                  </label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Max"
+                    required
+                    className="bg-muted border-border w-full"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-foreground mb-1">
+                    Nachname <span className="text-primary">*</span>
+                  </label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Muster"
+                    required
+                    className="bg-muted border-border w-full"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
                   E-Mail <span className="text-primary">*</span>
@@ -286,6 +372,69 @@ export default function SignInCard() {
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
+                  Passwort bestätigen <span className="text-primary">*</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={isConfirmPasswordVisible ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Passwort wiederholen"
+                    required
+                    className="bg-muted border-border w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                  >
+                    {isConfirmPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="canton" className="block text-sm font-medium text-foreground mb-1">
+                    Kanton <span className="text-primary">*</span>
+                  </label>
+                  <Select
+                    id="canton"
+                    value={canton}
+                    onChange={(e) => setCanton(e.target.value)}
+                    required
+                    className="bg-muted border-border w-full"
+                  >
+                    {SWISS_CANTONS.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-foreground mb-1">
+                    Rolle <span className="text-primary">*</span>
+                  </label>
+                  <Select
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    required
+                    className="bg-muted border-border w-full"
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
@@ -301,7 +450,7 @@ export default function SignInCard() {
                   )}
                 >
                   <span className="flex items-center justify-center">
-                    Anmelden
+                    Konto erstellen
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </span>
                   {isHovered && (
@@ -316,14 +465,11 @@ export default function SignInCard() {
                 </Button>
               </motion.div>
 
-              <div className="text-center mt-6 space-y-2">
-                <a href="#" className="text-primary hover:underline text-sm transition-colors block">
-                  Passwort vergessen?
-                </a>
+              <div className="text-center mt-4">
                 <span className="text-sm text-muted-foreground">
-                  Noch kein Konto?{" "}
-                  <Link href="/signup" className="text-primary hover:underline transition-colors">
-                    Jetzt registrieren
+                  Bereits ein Konto?{" "}
+                  <Link href="/login" className="text-primary hover:underline transition-colors">
+                    Anmelden
                   </Link>
                 </span>
               </div>

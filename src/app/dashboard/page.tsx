@@ -7,7 +7,8 @@ import SummaryTab from "@/components/dashboard/SummaryTab";
 import CommentList from "@/components/dashboard/CommentList";
 import AnalysisTab from "@/components/dashboard/AnalysisTab";
 import SourcesTab from "@/components/dashboard/SourcesTab";
-import type { Response } from "@/lib/types";
+import type { Response, Mention, SentimentType } from "@/lib/types";
+import type { ScrapedItem } from "@/lib/scraper/base";
 import {
   LineChart,
   Line,
@@ -43,14 +44,65 @@ const sentimentTimeData = [
   { date: "19 Mär", positive: 4, negative: 3, neutral: 3 },
 ];
 
+/** Convert a ScrapedItem from the API into a Mention for the dashboard. */
+function scrapedItemToMention(
+  item: ScrapedItem,
+  index: number,
+  politicianId: string
+): Mention {
+  return {
+    id: `scraped-${item.externalId}`,
+    politicianId,
+    articleId: `art-${item.externalId}`,
+    sourceId: `src-${item.platform}`,
+    platform: item.platform,
+    content: item.content || item.title,
+    author: item.author,
+    authorUrl: item.authorUrl || item.url,
+    sentiment: "neutral" as SentimentType,
+    sentimentScore: 0,
+    isViral: false,
+    engagementCount: item.engagementCount,
+    needsResponse: false,
+    tags: [],
+    createdAt: new Date(item.publishedAt),
+  };
+}
+
+/** Recalculate dashboard stats from mentions. */
+function recalcStats(mentions: Mention[]) {
+  const total = mentions.length;
+  if (total === 0) {
+    return {
+      totalMentions: 0,
+      positivePct: 0,
+      negativePct: 0,
+      neutralPct: 0,
+      needsResponse: 0,
+    };
+  }
+  const positive = mentions.filter((m) => m.sentiment === "positive").length;
+  const negative = mentions.filter((m) => m.sentiment === "negative").length;
+  const neutral = mentions.filter((m) => m.sentiment === "neutral").length;
+  return {
+    totalMentions: total,
+    positivePct: Math.round((positive / total) * 100),
+    negativePct: Math.round((negative / total) * 100),
+    neutralPct: Math.round((neutral / total) * 100),
+    needsResponse: mentions.filter((m) => m.needsResponse).length,
+  };
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState(mockDashboardData);
   const [activeTab, setActiveTab] = useState<Tab>("summary");
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isScraping, setIsScraping] = useState(false);
-  const [scrapeNotification, setScrapeNotification] = useState<string | null>(
-    null
-  );
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [scrapeNotification, setScrapeNotification] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   const handleGenerateResponse = useCallback(async (mentionId: string) => {
     setIsGenerating(mentionId);
@@ -120,23 +172,105 @@ export default function DashboardPage() {
       });
       const result = await res.json();
 
-      if (result.success) {
-        setScrapeNotification(
-          `${result.count} Artikel gefunden (${(result.durationMs / 1000).toFixed(1)}s)`
+      if (result.success && Array.isArray(result.items)) {
+        const newMentions = result.items.map(
+          (item: ScrapedItem, index: number) =>
+            scrapedItemToMention(item, index, data.politician.id)
         );
+
+        setData((prev) => {
+          // Deduplicate by id: existing mentions take precedence
+          const existingIds = new Set(prev.mentions.map((m) => m.id));
+          const uniqueNew = newMentions.filter(
+            (m: Mention) => !existingIds.has(m.id)
+          );
+          const merged = [...uniqueNew, ...prev.mentions];
+
+          return {
+            ...prev,
+            mentions: merged,
+            stats: recalcStats(merged),
+          };
+        });
+
+        const addedCount = newMentions.length;
+        setScrapeNotification({
+          message: `${addedCount} neue Artikel gefunden (${(result.durationMs / 1000).toFixed(1)}s)`,
+          type: "success",
+        });
       } else {
-        setScrapeNotification(
-          `Fehler: ${result.error ?? "Unbekannter Fehler"}`
-        );
+        setScrapeNotification({
+          message: `Fehler: ${result.error ?? "Unbekannter Fehler"}`,
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Fehler beim Scrapen:", error);
-      setScrapeNotification("Netzwerkfehler beim Scrapen");
+      setScrapeNotification({
+        message: "Netzwerkfehler beim Scrapen",
+        type: "error",
+      });
     } finally {
       setIsScraping(false);
-      setTimeout(() => setScrapeNotification(null), 6000);
+      setTimeout(() => setScrapeNotification(null), 8000);
     }
-  }, []);
+  }, [data.politician.id]);
+
+  const handleAnalyze = useCallback(async () => {
+    setIsAnalyzing(true);
+    setScrapeNotification(null);
+    try {
+      const mentionTexts = data.mentions.map((m) => m.content);
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mentions: mentionTexts }),
+      });
+      const result = await res.json();
+
+      if (result.success && Array.isArray(result.results)) {
+        setData((prev) => {
+          const updatedMentions = prev.mentions.map((mention, idx) => {
+            const analysis = result.results[idx];
+            if (!analysis) return mention;
+            return {
+              ...mention,
+              sentiment: analysis.sentiment as SentimentType,
+              sentimentScore: analysis.sentimentScore,
+              tags: analysis.tags || mention.tags,
+              needsResponse: analysis.needsResponse ?? mention.needsResponse,
+              isViral: analysis.isViral ?? mention.isViral,
+            };
+          });
+
+          return {
+            ...prev,
+            mentions: updatedMentions,
+            stats: recalcStats(updatedMentions),
+          };
+        });
+
+        setScrapeNotification({
+          message: `Sentiment-Analyse abgeschlossen (${result.analyzed} Erwähnungen)`,
+          type: "success",
+        });
+      } else {
+        setScrapeNotification({
+          message: `Analyse-Fehler: ${result.error ?? "Unbekannter Fehler"}`,
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Fehler bei der Analyse:", error);
+      setScrapeNotification({
+        message: "Netzwerkfehler bei der Sentiment-Analyse",
+        type: "error",
+      });
+    } finally {
+      setIsAnalyzing(false);
+      setTimeout(() => setScrapeNotification(null), 8000);
+    }
+  }, [data.mentions]);
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
@@ -146,15 +280,25 @@ export default function DashboardPage() {
         onTabChange={setActiveTab}
         onScrape={handleScrape}
         isScraping={isScraping}
+        onAnalyze={handleAnalyze}
+        isAnalyzing={isAnalyzing}
       />
 
-      {/* Scrape Notification */}
+      {/* Scrape / Analyze Notification */}
       {scrapeNotification && (
         <div className="mx-auto max-w-[1400px] px-6 pt-4">
           <div className="flex items-center justify-between rounded-lg border border-[#d8d8d8] bg-white px-4 py-3 text-sm text-[#343434] shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-[#644a40]" />
-              <span>{scrapeNotification}</span>
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  scrapeNotification.type === "success"
+                    ? "bg-green-500"
+                    : scrapeNotification.type === "error"
+                      ? "bg-red-500"
+                      : "bg-[#644a40]"
+                }`}
+              />
+              <span>{scrapeNotification.message}</span>
             </div>
             <button
               onClick={() => setScrapeNotification(null)}

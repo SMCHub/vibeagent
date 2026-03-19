@@ -420,6 +420,26 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'BE',
     type: 'tageszeitung',
   },
+  {
+    id: 'be-bielertagblatt',
+    name: 'Bieler Tagblatt',
+    url: 'https://www.bielertagblatt.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'BE',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'be-journaldujura',
+    name: 'Journal du Jura',
+    url: 'https://www.journaldujura.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'fr',
+    region: 'BE',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // LUZERN (LU)
@@ -462,6 +482,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     id: 'ag-zofingertagblatt',
     name: 'Zofinger Tagblatt',
     url: 'https://www.zofingertagblatt.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'AG',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'ag-lba',
+    name: 'Lenzburger Bezirks-Anzeiger',
+    url: 'https://www.lba.ch',
     rssFeed: null,
     googleNewsProxy: true,
     language: 'de',
@@ -512,6 +542,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'SG',
     type: 'tageszeitung',
   },
+  {
+    id: 'sg-sarganserlaender',
+    name: 'Sarganserländer',
+    url: 'https://www.sarganserlaender.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'SG',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // BASEL-STADT (BS) & BASEL-LANDSCHAFT (BL)
@@ -536,6 +576,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'BS',
     type: 'tageszeitung',
   },
+  {
+    id: 'bl-volksstimme',
+    name: 'Volksstimme',
+    url: 'https://www.volksstimme.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'BL',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // GRAUBUNDEN (GR)
@@ -546,6 +596,26 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: 'https://www.suedostschweiz.ch',
     rssFeed: 'https://www.suedostschweiz.ch/rss.xml',
     googleNewsProxy: false,
+    language: 'de',
+    region: 'GR',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'gr-engadinerpost',
+    name: 'Engadiner Post',
+    url: 'https://www.engadinerpost.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'GR',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'gr-buendnertagblatt',
+    name: 'Bündner Tagblatt',
+    url: 'https://www.buendnertagblatt.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
     language: 'de',
     region: 'GR',
     type: 'tageszeitung',
@@ -660,6 +730,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'GE',
     type: 'gratiszeitung',
   },
+  {
+    id: 'ge-lecourrier',
+    name: 'Le Courrier',
+    url: 'https://www.lecourrier.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'fr',
+    region: 'GE',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // VAUD (VD)
@@ -668,6 +748,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     id: 'vd-24heures',
     name: '24 heures',
     url: 'https://www.24heures.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'fr',
+    region: 'VD',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'vd-lacote',
+    name: 'La Côte',
+    url: 'https://www.lacote.ch',
     rssFeed: null,
     googleNewsProxy: true,
     language: 'fr',
@@ -697,6 +787,26 @@ export const NEWS_SOURCES: NewsSource[] = [
     language: 'it',
     region: 'TI',
     type: 'tageszeitung',
+  },
+  {
+    id: 'ti-gdp',
+    name: 'Giornale del Popolo',
+    url: 'https://www.gdp.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'it',
+    region: 'TI',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'ti-tio',
+    name: 'Ticino Online',
+    url: 'https://www.tio.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'it',
+    region: 'TI',
+    type: 'online',
   },
 
   // ---------------------------------------------------------------------------
@@ -764,6 +874,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'NW',
     type: 'tageszeitung',
   },
+  {
+    id: 'nw-nidwaldnerzeitung',
+    name: 'Nidwaldner Zeitung',
+    url: 'https://www.nidwaldnerzeitung.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'NW',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // OBWALDEN (OW)
@@ -772,6 +892,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     id: 'ow-luzernerzeitung-obwalden',
     name: 'Luzerner Zeitung (Obwalden)',
     url: 'https://www.luzernerzeitung.ch/zentralschweiz/obwalden',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'OW',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'ow-obwaldnerzeitung',
+    name: 'Obwaldner Zeitung',
+    url: 'https://www.obwaldnerzeitung.ch',
     rssFeed: null,
     googleNewsProxy: true,
     language: 'de',
@@ -792,6 +922,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     region: 'UR',
     type: 'tageszeitung',
   },
+  {
+    id: 'ur-urnerzeitung',
+    name: 'Urner Zeitung',
+    url: 'https://www.urnerzeitung.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'UR',
+    type: 'tageszeitung',
+  },
 
   // ---------------------------------------------------------------------------
   // SCHAFFHAUSEN (SH)
@@ -800,6 +940,16 @@ export const NEWS_SOURCES: NewsSource[] = [
     id: 'sh-shn',
     name: 'Schaffhauser Nachrichten',
     url: 'https://www.shn.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'SH',
+    type: 'tageszeitung',
+  },
+  {
+    id: 'sh-shaz',
+    name: 'Schaffhauser AZ',
+    url: 'https://www.shaz.ch',
     rssFeed: null,
     googleNewsProxy: true,
     language: 'de',
@@ -847,6 +997,50 @@ export const NEWS_SOURCES: NewsSource[] = [
     language: 'fr',
     region: 'NE',
     type: 'tageszeitung',
+  },
+
+  // ---------------------------------------------------------------------------
+  // ONLINE-ONLY REGIONAL NEWS
+  // ---------------------------------------------------------------------------
+  {
+    id: 'lu-zentralplus',
+    name: 'Zentralplus',
+    url: 'https://www.zentralplus.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'LU',
+    type: 'online',
+  },
+  {
+    id: 'zh-tsueri',
+    name: 'Tsüri',
+    url: 'https://www.tsuri.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'ZH',
+    type: 'online',
+  },
+  {
+    id: 'bs-bajour',
+    name: 'Bajour',
+    url: 'https://www.bajour.ch',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'BS',
+    type: 'online',
+  },
+  {
+    id: 'be-hauptstadt',
+    name: 'Hauptstadt',
+    url: 'https://www.hauptstadt.be',
+    rssFeed: null,
+    googleNewsProxy: true,
+    language: 'de',
+    region: 'BE',
+    type: 'online',
   },
 ];
 

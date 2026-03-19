@@ -1,10 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { analyzeSentiment } from '@/lib/ai/sentiment'
 import { mockDashboardData } from '@/data/mock'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const mentionTexts = mockDashboardData.mentions.map((m) => m.content)
+    let mentionTexts: string[]
+
+    // Accept mentions from request body, fall back to mock data
+    try {
+      const body = await request.json()
+      if (Array.isArray(body.mentions) && body.mentions.length > 0) {
+        mentionTexts = body.mentions
+      } else {
+        mentionTexts = mockDashboardData.mentions.map((m) => m.content)
+      }
+    } catch {
+      mentionTexts = mockDashboardData.mentions.map((m) => m.content)
+    }
 
     const results = await analyzeSentiment(mentionTexts)
 

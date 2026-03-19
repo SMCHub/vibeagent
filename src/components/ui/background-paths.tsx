@@ -108,7 +108,7 @@ export function BackgroundPaths({
 
                     <div className="flex items-center justify-center gap-4">
                         <Link
-                            href="/dashboard"
+                            href="/signup"
                             className="inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:opacity-90 font-sans"
                         >
                             Kostenlos testen

@@ -92,7 +92,7 @@ const plans = [
       "Basis-Sentiment",
     ],
     cta: "Kostenlos testen",
-    ctaLink: "/dashboard",
+    ctaLink: "/signup",
     highlighted: false,
   },
   {
@@ -109,7 +109,7 @@ const plans = [
       "Krisen-Alerts",
     ],
     cta: "Jetzt starten",
-    ctaLink: "/dashboard",
+    ctaLink: "/signup",
     highlighted: true,
   },
   {
@@ -182,12 +182,20 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <Link
-            href="/login"
-            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
-          >
-            Anmelden
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/signup"
+              className="rounded-lg border border-primary px-5 py-2.5 text-sm font-medium text-primary transition-all hover:bg-primary/10"
+            >
+              Registrieren
+            </Link>
+            <Link
+              href="/login"
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
+            >
+              Anmelden
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -336,10 +344,10 @@ export default function LandingPage() {
             Starten Sie jetzt kostenlos — keine Kreditkarte nötig.
           </p>
           <Link
-            href="/dashboard"
+            href="/signup"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:opacity-90"
           >
-            Dashboard öffnen
+            Kostenlos testen
             <ArrowRight className="h-5 w-5" />
           </Link>
         </div>
