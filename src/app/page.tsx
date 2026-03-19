@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { BackgroundPaths } from "@/components/ui/background-paths";
+import { Logos3 } from "@/components/blocks/logos3";
 import {
   Activity,
   BarChart3,
@@ -11,9 +13,7 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
-  Shield,
   Zap,
-  Globe,
 } from "lucide-react";
 
 const features = [
@@ -21,13 +21,13 @@ const features = [
     icon: Activity,
     title: "Echtzeit-Monitoring",
     description:
-      "65+ Schweizer Nachrichtenquellen und 8 Social-Media-Plattformen. Von der NZZ bis TikTok — nichts entgeht Ihnen.",
+      "65+ Schweizer Nachrichtenquellen und 8 Social-Media-Plattformen. Von der NZZ bis TikTok.",
   },
   {
     icon: Brain,
     title: "KI-Sentiment-Analyse",
     description:
-      "GPT-4o analysiert jede Erwähnung: Sentiment, Themen, Viralität. Erkennen Sie Krisen, bevor sie eskalieren.",
+      "GPT-4o analysiert jede Erwähnung: Sentiment, Themen, Viralität. Krisen erkennen, bevor sie eskalieren.",
   },
   {
     icon: MessageSquare,
@@ -45,7 +45,7 @@ const features = [
     icon: BarChart3,
     title: "Themen-Radar",
     description:
-      "Erkennen Sie die wichtigsten Themen in Ihrem Wahlkreis. Trends und Handlungsbedarf auf einen Blick.",
+      "Die wichtigsten Themen in Ihrem Wahlkreis. Trends und Handlungsbedarf auf einen Blick.",
   },
   {
     icon: AlertTriangle,
@@ -129,187 +129,85 @@ const plans = [
   },
 ];
 
-const mediaBadges = [
-  "NZZ",
-  "Tages-Anzeiger",
-  "20 Minuten",
-  "SRF",
-  "Blick",
-  "Watson",
-  "Le Temps",
-  "Corriere del Ticino",
-];
+const LOGO_TOKEN = "pk_X-1ZO13GSgeOoUrIuJ6GMQ";
+const logo = (domain: string) =>
+  `https://img.logo.dev/${domain}?token=${LOGO_TOKEN}&format=png&size=60`;
+
+const logoData = {
+  heading: "Überwacht alle Schweizer Medien & Social Media",
+  logos: [
+    { id: "nzz", description: "NZZ", image: logo("nzz.ch"), className: "h-6 w-auto" },
+    { id: "tagi", description: "Tages-Anzeiger", image: logo("tagesanzeiger.ch"), className: "h-6 w-auto" },
+    { id: "20min", description: "20 Minuten", image: logo("20min.ch"), className: "h-6 w-auto" },
+    { id: "srf", description: "SRF", image: logo("srf.ch"), className: "h-6 w-auto" },
+    { id: "blick", description: "Blick", image: logo("blick.ch"), className: "h-6 w-auto" },
+    { id: "watson", description: "Watson", image: logo("watson.ch"), className: "h-6 w-auto" },
+    { id: "facebook", description: "Facebook", image: logo("facebook.com"), className: "h-6 w-auto" },
+    { id: "instagram", description: "Instagram", image: logo("instagram.com"), className: "h-6 w-auto" },
+    { id: "linkedin", description: "LinkedIn", image: logo("linkedin.com"), className: "h-6 w-auto" },
+    { id: "twitter", description: "X", image: logo("x.com"), className: "h-6 w-auto" },
+    { id: "youtube", description: "YouTube", image: logo("youtube.com"), className: "h-6 w-auto" },
+    { id: "reddit", description: "Reddit", image: logo("reddit.com"), className: "h-6 w-auto" },
+    { id: "tiktok", description: "TikTok", image: logo("tiktok.com"), className: "h-6 w-auto" },
+    { id: "letemps", description: "Le Temps", image: logo("letemps.ch"), className: "h-6 w-auto" },
+    { id: "rts", description: "RTS", image: logo("rts.ch"), className: "h-6 w-auto" },
+    { id: "bernerzeitung", description: "Berner Zeitung", image: logo("bernerzeitung.ch"), className: "h-6 w-auto" },
+    { id: "luzernerzeitung", description: "Luzerner Zeitung", image: logo("luzernerzeitung.ch"), className: "h-6 w-auto" },
+    { id: "suedostschweiz", description: "Südostschweiz", image: logo("suedostschweiz.ch"), className: "h-6 w-auto" },
+  ],
+};
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-[#644a40]">
-      {/* ── Navbar ──────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-black/5 bg-white/80 backdrop-blur-xl">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* ── Navbar ──────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#644a40]">
-              <span className="text-sm font-bold text-white">V</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">V</span>
             </div>
-            <span className="text-lg font-semibold tracking-tight">
-              VibeAgent
-            </span>
+            <span className="text-lg font-semibold tracking-tight">VibeAgent</span>
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
-            <a
-              href="#features"
-              className="text-sm text-[#666] transition-colors hover:text-[#644a40]"
-            >
+            <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Features
             </a>
-            <a
-              href="#preise"
-              className="text-sm text-[#666] transition-colors hover:text-[#644a40]"
-            >
+            <a href="#preise" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Preise
             </a>
-            <a
-              href="#kontakt"
-              className="text-sm text-[#666] transition-colors hover:text-[#644a40]"
-            >
+            <a href="#kontakt" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Kontakt
             </a>
           </div>
 
           <Link
             href="/dashboard"
-            className="rounded-lg bg-[#644a40] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#333]"
+            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90"
           >
             Dashboard
           </Link>
         </div>
       </nav>
 
-      {/* ── Hero ────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-24 md:pt-32">
-        {/* Grid Background */}
-        <div
-          className="absolute inset-0 -z-10 h-[600px] w-full opacity-60"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #e5e5e5 1px, transparent 1px), linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)",
-            backgroundSize: "4rem 4rem",
-            maskImage:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, #000 70%, transparent 110%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, #000 70%, transparent 110%)",
-          }}
-        />
+      {/* ── Hero with BackgroundPaths ──────────────────────── */}
+      <BackgroundPaths
+        title="Politisches Frühwarnsystem"
+        subtitle="Überwachen Sie alle Schweizer Medien und Social-Media-Plattformen in Echtzeit. KI-gestützte Analyse und automatische Antwortvorschläge."
+      />
 
-        {/* Radial Gradient Accent */}
-        <div className="absolute left-1/2 top-0 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-b from-blue-50 via-transparent to-transparent opacity-80" />
+      {/* ── Logo Carousel ──────────────────────────────────── */}
+      <Logos3 {...logoData} />
 
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-[#666] shadow-sm">
-            <Zap className="h-3.5 w-3.5 text-[#644a40]" />
-            Jetzt für Schweizer Politiker verfügbar
-            <ChevronRight className="h-3.5 w-3.5" />
-          </div>
-
-          <h1 className="mb-6 text-5xl font-semibold leading-[1.1] tracking-tight text-[#644a40] md:text-7xl">
-            Ihr politisches
-            <br />
-            <span className="bg-gradient-to-r from-[#644a40] via-[#444] to-[#999] bg-clip-text text-transparent">
-              Frühwarnsystem
-            </span>
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-[#666] md:text-xl">
-            Überwachen Sie alle Schweizer Medien und Social-Media-Plattformen in
-            Echtzeit. KI-gestützte Analyse und automatische Antwortvorschläge.
-          </p>
-
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#644a40] px-7 py-3.5 text-sm font-medium text-white shadow-lg shadow-black/10 transition-all hover:bg-[#333] hover:shadow-xl"
-            >
-              Kostenlos testen
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href="#features"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-white px-7 py-3.5 text-sm font-medium text-[#644a40] transition-all hover:border-[#ccc] hover:bg-[#fafafa]"
-            >
-              Mehr erfahren
-            </a>
-          </div>
-        </div>
-
-        {/* Mock Dashboard Preview */}
-        <div className="mx-auto mt-20 max-w-5xl">
-          <div className="rounded-xl border border-[#e5e5e5] bg-white p-2 shadow-2xl shadow-black/5 ring-1 ring-black/5">
-            <div className="rounded-lg bg-[#fafafa] p-6">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-[#e5e5e5]" />
-                  <div className="h-3 w-3 rounded-full bg-[#e5e5e5]" />
-                  <div className="h-3 w-3 rounded-full bg-[#e5e5e5]" />
-                </div>
-                <div className="h-6 w-64 rounded-md bg-[#e5e5e5]" />
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                {["Erwähnungen", "Positiv", "Negativ", "Antworten"].map(
-                  (label) => (
-                    <div
-                      key={label}
-                      className="rounded-lg border border-[#e5e5e5] bg-white p-4"
-                    >
-                      <div className="text-xs text-[#999]">{label}</div>
-                      <div className="mt-1 text-2xl font-semibold text-[#644a40]">
-                        {label === "Positiv"
-                          ? "40%"
-                          : label === "Negativ"
-                            ? "30%"
-                            : label === "Antworten"
-                              ? "3"
-                              : "10"}
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                <div className="col-span-2 h-32 rounded-lg border border-[#e5e5e5] bg-white" />
-                <div className="h-32 rounded-lg border border-[#e5e5e5] bg-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Trust Bar ──────────────────────────────────────────────── */}
-      <section className="border-y border-[#f0f0f0] bg-[#fafafa] px-6 py-12">
-        <div className="mx-auto max-w-5xl">
-          <p className="mb-8 text-center text-xs font-medium uppercase tracking-widest text-[#999]">
-            Überwacht Quellen von
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {mediaBadges.map((name) => (
-              <span
-                key={name}
-                className="text-sm font-medium text-[#999] transition-colors hover:text-[#666]"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ───────────────────────────────────────────────── */}
+      {/* ── Features ───────────────────────────────────────── */}
       <section id="features" className="px-6 py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-16 max-w-2xl text-center">
             <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-4xl">
               Alles was Sie brauchen
             </h2>
-            <p className="text-lg text-[#666]">
+            <p className="text-lg text-muted-foreground">
               Ein umfassendes Monitoring-Tool für die Schweizer Politlandschaft.
             </p>
           </div>
@@ -318,13 +216,13 @@ export default function LandingPage() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="group rounded-xl border border-[#f0f0f0] bg-white p-6 transition-all hover:border-[#e0e0e0] hover:shadow-lg hover:shadow-black/5"
+                className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
               >
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#f5f5f5] transition-colors group-hover:bg-[#644a40]">
-                  <f.icon className="h-5 w-5 text-[#666] transition-colors group-hover:text-white" />
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-secondary transition-colors group-hover:bg-primary">
+                  <f.icon className="h-5 w-5 text-secondary-foreground transition-colors group-hover:text-primary-foreground" />
                 </div>
                 <h3 className="mb-2 text-base font-semibold">{f.title}</h3>
-                <p className="text-sm leading-relaxed text-[#666]">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {f.description}
                 </p>
               </div>
@@ -333,8 +231,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How It Works ───────────────────────────────────────────── */}
-      <section className="border-y border-[#f0f0f0] bg-[#fafafa] px-6 py-24">
+      {/* ── How It Works ───────────────────────────────────── */}
+      <section className="border-y border-border bg-muted px-6 py-24">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-16 text-center text-3xl font-semibold tracking-tight md:text-4xl">
             So funktioniert es
@@ -342,41 +240,38 @@ export default function LandingPage() {
           <div className="grid gap-8 md:grid-cols-3">
             {steps.map((s) => (
               <div key={s.num} className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#644a40] text-sm font-bold text-white">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                   {s.num}
                 </div>
                 <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-[#666]">{s.desc}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Stats ──────────────────────────────────────────────────── */}
+      {/* ── Stats ──────────────────────────────────────────── */}
       <section className="px-6 py-24">
         <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 md:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label} className="text-center">
-              <div className="text-4xl font-bold tracking-tight md:text-5xl">
+              <div className="text-4xl font-bold tracking-tight text-primary md:text-5xl">
                 {s.value}
               </div>
-              <div className="mt-2 text-sm text-[#666]">{s.label}</div>
+              <div className="mt-2 text-sm text-muted-foreground">{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Pricing ────────────────────────────────────────────────── */}
-      <section
-        id="preise"
-        className="border-y border-[#f0f0f0] bg-[#fafafa] px-6 py-24"
-      >
+      {/* ── Pricing ────────────────────────────────────────── */}
+      <section id="preise" className="border-y border-border bg-muted px-6 py-24">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-center text-3xl font-semibold tracking-tight md:text-4xl">
             Einfache, transparente Preise
           </h2>
-          <p className="mb-16 text-center text-lg text-[#666]">
+          <p className="mb-16 text-center text-lg text-muted-foreground">
             Starten Sie kostenlos. Upgraden Sie wenn nötig.
           </p>
 
@@ -386,12 +281,12 @@ export default function LandingPage() {
                 key={p.name}
                 className={`relative flex flex-col rounded-xl border p-8 transition-all ${
                   p.highlighted
-                    ? "border-[#644a40] bg-white shadow-xl shadow-black/10"
-                    : "border-[#e5e5e5] bg-white hover:border-[#ccc] hover:shadow-lg hover:shadow-black/5"
+                    ? "border-primary bg-card shadow-xl shadow-primary/10"
+                    : "border-border bg-card hover:border-primary/30 hover:shadow-lg"
                 }`}
               >
                 {p.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#644a40] px-4 py-1 text-xs font-medium text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground">
                     {p.badge}
                   </span>
                 )}
@@ -401,7 +296,7 @@ export default function LandingPage() {
                   <div className="mt-3">
                     <span className="text-3xl font-bold">{p.price}</span>
                     {p.period && (
-                      <span className="text-sm text-[#666]">{p.period}</span>
+                      <span className="text-sm text-muted-foreground">{p.period}</span>
                     )}
                   </div>
                 </div>
@@ -409,7 +304,7 @@ export default function LandingPage() {
                 <ul className="mb-8 flex-1 space-y-3">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="h-4 w-4 shrink-0 text-[#644a40]" />
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
                       {f}
                     </li>
                   ))}
@@ -419,8 +314,8 @@ export default function LandingPage() {
                   href={p.ctaLink}
                   className={`block rounded-lg py-3 text-center text-sm font-medium transition-all ${
                     p.highlighted
-                      ? "bg-[#644a40] text-white hover:bg-[#333]"
-                      : "border border-[#e5e5e5] text-[#644a40] hover:bg-[#f5f5f5]"
+                      ? "bg-primary text-primary-foreground hover:opacity-90"
+                      : "border border-border text-foreground hover:bg-accent"
                   }`}
                 >
                   {p.cta}
@@ -431,18 +326,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ────────────────────────────────────────────────────── */}
+      {/* ── CTA ────────────────────────────────────────────── */}
       <section className="px-6 py-24" id="kontakt">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-4xl">
             Bereit, Ihren Wahlkreis besser zu verstehen?
           </h2>
-          <p className="mb-10 text-lg text-[#666]">
+          <p className="mb-10 text-lg text-muted-foreground">
             Starten Sie jetzt kostenlos — keine Kreditkarte nötig.
           </p>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#644a40] px-8 py-4 text-base font-medium text-white shadow-lg shadow-black/10 transition-all hover:bg-[#333] hover:shadow-xl"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:opacity-90"
           >
             Dashboard öffnen
             <ArrowRight className="h-5 w-5" />
@@ -450,17 +345,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#f0f0f0] bg-white px-6 py-16">
+      {/* ── Footer ─────────────────────────────────────────── */}
+      <footer className="border-t border-border bg-card px-6 py-16">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-4">
           <div>
             <div className="mb-4 flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#644a40]">
-                <span className="text-xs font-bold text-white">V</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
+                <span className="text-xs font-bold text-primary-foreground">V</span>
               </div>
               <span className="font-semibold">VibeAgent</span>
             </div>
-            <p className="text-sm leading-relaxed text-[#999]">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Politisches Monitoring
               <br />
               für die Schweiz.
@@ -493,7 +388,7 @@ export default function LandingPage() {
             },
           ].map((col) => (
             <div key={col.title}>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#999]">
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {col.title}
               </h4>
               <ul className="space-y-3">
@@ -501,7 +396,7 @@ export default function LandingPage() {
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-[#666] transition-colors hover:text-[#644a40]"
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {link.label}
                     </a>
@@ -511,7 +406,7 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-        <div className="mx-auto mt-12 max-w-6xl border-t border-[#f0f0f0] pt-8 text-center text-xs text-[#999]">
+        <div className="mx-auto mt-12 max-w-6xl border-t border-border pt-8 text-center text-xs text-muted-foreground">
           © 2026 VibeAgent. Made in Switzerland.
         </div>
       </footer>
