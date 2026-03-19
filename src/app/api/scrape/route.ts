@@ -58,22 +58,22 @@ export async function POST() {
         createdAt = new Date().toISOString();
       }
 
-      const result = await insertMention({
-        id: `rss-${item.externalId}`,
-        sourceId: `src-${item.platform}`,
-        platform: item.platform,
-        title: item.title,
-        url: item.url,
-        content: item.content,
-        author: item.author,
-        authorUrl: item.authorUrl,
-        engagementCount: item.engagementCount,
-        createdAt,
-      });
-
-      // insertMention uses onConflictDoNothing -- check if a row was actually inserted
-      if (result.changes > 0) {
+      try {
+        await insertMention({
+          id: `rss-${item.externalId}`,
+          sourceId: `src-${item.platform}`,
+          platform: item.platform,
+          title: item.title,
+          url: item.url,
+          content: item.content,
+          author: item.author,
+          authorUrl: item.authorUrl,
+          engagementCount: item.engagementCount,
+          createdAt,
+        });
         newCount++;
+      } catch {
+        // Duplicate or insert error — skip silently
       }
     }
 
