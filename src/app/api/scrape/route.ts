@@ -71,7 +71,7 @@ export async function POST() {
           engagementCount: item.engagementCount,
           createdAt,
         });
-        if (result.rowsAffected > 0) {
+        if (Number(result.rowsAffected) > 0) {
           newCount++;
         }
       } catch {
