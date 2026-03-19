@@ -67,10 +67,21 @@ export async function insertMention(mention: {
   engagementCount: number;
   createdAt: string;
 }) {
-  return rawClient.execute({
-    sql: `INSERT OR IGNORE INTO mentions (id, politician_id, source_id, platform, title, url, content, author, author_url, sentiment, sentiment_score, is_viral, engagement_count, needs_response, tags, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [mention.id, 'default', mention.sourceId, mention.platform, mention.title, mention.url, mention.content, mention.author, mention.authorUrl, 'neutral', 0, 0, mention.engagementCount, 0, '[]', mention.createdAt],
+  // Check if already exists first
+  const existing = await db.select({ id: mentions.id }).from(mentions).where(eq(mentions.id, mention.id));
+  if (existing.length > 0) {
+    return { rowsAffected: 0 };
+  }
+  await db.insert(mentions).values({
+    ...mention,
+    politicianId: 'default',
+    sentiment: 'neutral',
+    sentimentScore: 0,
+    isViral: 0,
+    needsResponse: 0,
+    tags: '[]',
   });
+  return { rowsAffected: 1 };
 }
 
 export async function updateMentionSentiment(id: string, data: {
