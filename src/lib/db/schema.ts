@@ -12,19 +12,19 @@ export const mentions = sqliteTable('mentions', {
   authorUrl: text('author_url').notNull().default(''),
   sentiment: text('sentiment').notNull().default('neutral'),
   sentimentScore: real('sentiment_score').notNull().default(0),
-  isViral: integer('is_viral', { mode: 'boolean' }).notNull().default(false),
+  isViral: integer('is_viral').notNull().default(0),
   engagementCount: integer('engagement_count').notNull().default(0),
-  needsResponse: integer('needs_response', { mode: 'boolean' }).notNull().default(false),
-  tags: text('tags').notNull().default('[]'),  // JSON stringified
+  needsResponse: integer('needs_response').notNull().default(0),
+  tags: text('tags').notNull().default('[]'),
   createdAt: text('created_at').notNull(),
 });
 
 export const responses = sqliteTable('responses', {
   id: text('id').primaryKey(),
-  mentionId: text('mention_id').notNull().references(() => mentions.id),
+  mentionId: text('mention_id').notNull(),
   generatedText: text('generated_text').notNull(),
   improvedText: text('improved_text'),
-  wasCopied: integer('was_copied', { mode: 'boolean' }).notNull().default(false),
+  wasCopied: integer('was_copied').notNull().default(0),
   createdAt: text('created_at').notNull(),
 });
 

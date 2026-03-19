@@ -15,9 +15,9 @@ function rowToMention(row: typeof mentions.$inferSelect): Mention {
     authorUrl: row.authorUrl,
     sentiment: row.sentiment as SentimentType,
     sentimentScore: row.sentimentScore,
-    isViral: row.isViral,
+    isViral: Boolean(row.isViral),
     engagementCount: row.engagementCount,
-    needsResponse: row.needsResponse,
+    needsResponse: Boolean(row.needsResponse),
     tags: JSON.parse(row.tags),
     createdAt: new Date(row.createdAt),
   };
@@ -29,7 +29,7 @@ function rowToResponse(row: typeof responses.$inferSelect): Response {
     mentionId: row.mentionId,
     generatedText: row.generatedText,
     improvedText: row.improvedText,
-    wasCopied: row.wasCopied,
+    wasCopied: Boolean(row.wasCopied),
   };
 }
 
@@ -72,8 +72,8 @@ export async function insertMention(mention: {
     politicianId: 'default',
     sentiment: 'neutral',
     sentimentScore: 0,
-    isViral: false,
-    needsResponse: false,
+    isViral: 0,
+    needsResponse: 0,
     tags: '[]',
   }).onConflictDoNothing();
 }
@@ -89,8 +89,8 @@ export async function updateMentionSentiment(id: string, data: {
     sentiment: data.sentiment,
     sentimentScore: data.sentimentScore,
     tags: JSON.stringify(data.tags),
-    needsResponse: data.needsResponse,
-    isViral: data.isViral,
+    needsResponse: data.needsResponse ? 1 : 0,
+    isViral: data.isViral ? 1 : 0,
   }).where(eq(mentions.id, id));
 }
 
@@ -116,7 +116,7 @@ export async function insertResponse(data: {
   return db.insert(responses).values({
     ...data,
     improvedText: null,
-    wasCopied: false,
+    wasCopied: 0,
     createdAt: new Date().toISOString(),
   }).onConflictDoNothing();
 }
