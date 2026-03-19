@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mention = getMentionById(mentionId);
+    const mention = await getMentionById(mentionId);
     if (!mention) {
       return NextResponse.json(
         { success: false, error: 'Erwähnung nicht gefunden' },
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Save the generated response to the DB
     const responseId = `res-${mentionId}-${Date.now()}`;
-    insertResponse({
+    await insertResponse({
       id: responseId,
       mentionId,
       generatedText: responseText,

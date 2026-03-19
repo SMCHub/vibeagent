@@ -15,7 +15,7 @@ const DEFAULT_KEYWORDS = [
 const SCRAPE_TIMEOUT_MS = 90_000;
 
 export async function GET() {
-  const count = getMentionCount();
+  const count = await getMentionCount();
   return NextResponse.json({
     status: 'ready',
     sources: 'Swiss news sources (65+ newspapers, 26 canton geo-feeds)',
@@ -58,7 +58,7 @@ export async function POST() {
         createdAt = new Date().toISOString();
       }
 
-      const result = insertMention({
+      const result = await insertMention({
         id: `rss-${item.externalId}`,
         sourceId: `src-${item.platform}`,
         platform: item.platform,

@@ -3,7 +3,7 @@ import { NEWS_SOURCES, SOCIAL_MEDIA_TARGETS, CANTONS, GOOGLE_NEWS_GEO_FEEDS } fr
 import { getMentionCount } from '@/lib/db/helpers';
 
 export async function GET() {
-  const mentionCount = getMentionCount();
+  const mentionCount = await getMentionCount();
 
   return NextResponse.json({
     cantons: CANTONS,

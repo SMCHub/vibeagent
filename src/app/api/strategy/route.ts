@@ -5,9 +5,9 @@ import { getAllMentions, getAllTopics, getDashboardStats } from '@/lib/db/helper
 
 export async function POST() {
   try {
-    const mentions = getAllMentions();
-    const topics = getAllTopics();
-    const stats = getDashboardStats();
+    const mentions = await getAllMentions();
+    const topics = await getAllTopics();
+    const stats = await getDashboardStats();
 
     // If the DB is empty, ask the user to scrape first
     if (mentions.length === 0) {

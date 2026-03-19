@@ -3,7 +3,6 @@ import { mentions, responses, topics } from './schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { Mention, Response, Topic, DashboardData, SentimentType, Importance, Trend, Platform } from '@/lib/types';
 
-// Convert DB row to Mention type
 function rowToMention(row: typeof mentions.$inferSelect): Mention {
   return {
     id: row.id,
@@ -46,17 +45,17 @@ function rowToTopic(row: typeof topics.$inferSelect): Topic {
   };
 }
 
-export function getAllMentions(): Mention[] {
-  const rows = db.select().from(mentions).orderBy(desc(mentions.createdAt)).all();
+export async function getAllMentions(): Promise<Mention[]> {
+  const rows = await db.select().from(mentions).orderBy(desc(mentions.createdAt));
   return rows.map(rowToMention);
 }
 
-export function getMentionById(id: string): Mention | null {
-  const row = db.select().from(mentions).where(eq(mentions.id, id)).get();
-  return row ? rowToMention(row) : null;
+export async function getMentionById(id: string): Promise<Mention | null> {
+  const rows = await db.select().from(mentions).where(eq(mentions.id, id));
+  return rows[0] ? rowToMention(rows[0]) : null;
 }
 
-export function insertMention(mention: {
+export async function insertMention(mention: {
   id: string;
   sourceId: string;
   platform: string;
@@ -76,10 +75,10 @@ export function insertMention(mention: {
     isViral: false,
     needsResponse: false,
     tags: '[]',
-  }).onConflictDoNothing().run();
+  }).onConflictDoNothing();
 }
 
-export function updateMentionSentiment(id: string, data: {
+export async function updateMentionSentiment(id: string, data: {
   sentiment: string;
   sentimentScore: number;
   tags: string[];
@@ -92,11 +91,11 @@ export function updateMentionSentiment(id: string, data: {
     tags: JSON.stringify(data.tags),
     needsResponse: data.needsResponse,
     isViral: data.isViral,
-  }).where(eq(mentions.id, id)).run();
+  }).where(eq(mentions.id, id));
 }
 
-export function getAllResponses(): Record<string, Response> {
-  const rows = db.select().from(responses).all();
+export async function getAllResponses(): Promise<Record<string, Response>> {
+  const rows = await db.select().from(responses);
   const map: Record<string, Response> = {};
   for (const row of rows) {
     map[row.mentionId] = rowToResponse(row);
@@ -104,12 +103,12 @@ export function getAllResponses(): Record<string, Response> {
   return map;
 }
 
-export function getResponseByMentionId(mentionId: string): Response | null {
-  const row = db.select().from(responses).where(eq(responses.mentionId, mentionId)).get();
-  return row ? rowToResponse(row) : null;
+export async function getResponseByMentionId(mentionId: string): Promise<Response | null> {
+  const rows = await db.select().from(responses).where(eq(responses.mentionId, mentionId));
+  return rows[0] ? rowToResponse(rows[0]) : null;
 }
 
-export function insertResponse(data: {
+export async function insertResponse(data: {
   id: string;
   mentionId: string;
   generatedText: string;
@@ -119,31 +118,31 @@ export function insertResponse(data: {
     improvedText: null,
     wasCopied: false,
     createdAt: new Date().toISOString(),
-  }).onConflictDoNothing().run();
+  }).onConflictDoNothing();
 }
 
-export function updateResponseImproved(mentionId: string, improvedText: string) {
-  return db.update(responses).set({ improvedText }).where(eq(responses.mentionId, mentionId)).run();
+export async function updateResponseImproved(mentionId: string, improvedText: string) {
+  return db.update(responses).set({ improvedText }).where(eq(responses.mentionId, mentionId));
 }
 
-export function getAllTopics(): Topic[] {
-  const rows = db.select().from(topics).orderBy(desc(topics.mentionCount)).all();
+export async function getAllTopics(): Promise<Topic[]> {
+  const rows = await db.select().from(topics).orderBy(desc(topics.mentionCount));
   return rows.map(rowToTopic);
 }
 
-export function replaceTopics(newTopics: { id: string; name: string; importance: string; mentionCount: number; trend: string; }[]) {
-  db.delete(topics).run();
+export async function replaceTopics(newTopics: { id: string; name: string; importance: string; mentionCount: number; trend: string; }[]) {
+  await db.delete(topics);
   for (const t of newTopics) {
-    db.insert(topics).values({
+    await db.insert(topics).values({
       ...t,
       politicianId: 'default',
       date: new Date().toISOString(),
-    }).run();
+    });
   }
 }
 
-export function getDashboardStats() {
-  const all = db.select().from(mentions).all();
+export async function getDashboardStats() {
+  const all = await db.select().from(mentions);
   const total = all.length;
   if (total === 0) return { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0 };
 
@@ -161,24 +160,24 @@ export function getDashboardStats() {
   };
 }
 
-export function getDashboardData(): DashboardData {
+export async function getDashboardData(): Promise<DashboardData> {
   return {
     politician: {
       id: 'default',
-      name: 'Thomas M\u00fcller',
+      name: 'Thomas Müller',
       title: 'Gemeinderat',
-      keywords: ['M\u00fcller', 'Gemeinderat', 'Z\u00fcrich', 'Mitte', 'Verkehr', 'Wohnen'],
-      constituency: 'Stadt Z\u00fcrich',
+      keywords: ['Müller', 'Gemeinderat', 'Zürich', 'Mitte', 'Verkehr', 'Wohnen'],
+      constituency: 'Stadt Zürich',
       sources: [],
     },
-    mentions: getAllMentions(),
-    responses: getAllResponses(),
-    topics: getAllTopics(),
-    stats: getDashboardStats(),
+    mentions: await getAllMentions(),
+    responses: await getAllResponses(),
+    topics: await getAllTopics(),
+    stats: await getDashboardStats(),
   };
 }
 
-export function getMentionCount(): number {
-  const result = db.select({ count: sql<number>`count(*)` }).from(mentions).get();
-  return result?.count ?? 0;
+export async function getMentionCount(): Promise<number> {
+  const result = await db.select({ count: sql<number>`count(*)` }).from(mentions);
+  return result[0]?.count ?? 0;
 }

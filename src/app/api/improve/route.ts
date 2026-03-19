@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Look up the current response for this mention from the DB
-    const existingResponse = getResponseByMentionId(mentionId);
+    const existingResponse = await getResponseByMentionId(mentionId);
     const currentText =
       existingResponse?.improvedText ?? existingResponse?.generatedText;
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const improved = await improveResponse(currentText, feedback);
 
     // Save the improved text back to the DB
-    updateResponseImproved(mentionId, improved);
+    await updateResponseImproved(mentionId, improved);
 
     return NextResponse.json({
       success: true,

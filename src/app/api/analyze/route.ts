@@ -9,7 +9,7 @@ import {
 
 export async function POST() {
   try {
-    const allMentions = getAllMentions();
+    const allMentions = await getAllMentions();
 
     if (allMentions.length === 0) {
       return NextResponse.json({
@@ -43,7 +43,7 @@ export async function POST() {
       const mention = unanalyzed[i];
       const result = results[i];
       if (result) {
-        updateMentionSentiment(mention.id, {
+        await updateMentionSentiment(mention.id, {
           sentiment: result.sentiment,
           sentimentScore: result.sentimentScore,
           tags: result.tags,
@@ -56,9 +56,9 @@ export async function POST() {
 
     // Run topic extraction on ALL mentions (including previously analyzed ones)
     // so the topic radar reflects the full picture
-    const refreshedMentions = getAllMentions();
+    const refreshedMentions = await getAllMentions();
     const extractedTopics = await extractTopics(refreshedMentions);
-    replaceTopics(
+    await replaceTopics(
       extractedTopics.map((t) => ({
         id: t.id,
         name: t.name,
