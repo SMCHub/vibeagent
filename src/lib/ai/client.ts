@@ -9,6 +9,6 @@ export const openai = new Proxy({} as OpenAI, {
         apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
       });
     }
-    return (_openai as Record<string, unknown>)[prop as string];
+    return (_openai as unknown as Record<string, unknown>)[prop as string];
   },
 });
