@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, RefreshCw, Loader2, Brain, BarChart3, MessageSquare, LayoutDashboard, Globe } from 'lucide-react';
+import { Settings, RefreshCw, Loader2, Brain, BarChart3, MessageSquare, LayoutDashboard, Globe, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
@@ -13,6 +13,8 @@ interface HeaderProps {
   isScraping: boolean;
   onAnalyze: () => void;
   isAnalyzing: boolean;
+  userName?: string;
+  onLogout?: () => void;
 }
 
 const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
@@ -29,6 +31,8 @@ export default function Header({
   isScraping,
   onAnalyze,
   isAnalyzing,
+  userName,
+  onLogout,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl">
@@ -93,6 +97,22 @@ export default function Header({
             >
               <Settings className="h-4.5 w-4.5" />
             </Link>
+            {userName && (
+              <>
+                <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+                <span className="text-xs text-muted-foreground hidden sm:inline">{userName}</span>
+              </>
+            )}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Abmelden"
+                title="Abmelden"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 

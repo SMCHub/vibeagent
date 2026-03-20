@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/dashboard/Header";
 import SummaryTab from "@/components/dashboard/SummaryTab";
 import CommentList from "@/components/dashboard/CommentList";
@@ -36,12 +37,14 @@ const emptyData: DashboardData = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData>(emptyData);
   const [activeTab, setActiveTab] = useState<Tab>("summary");
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isScraping, setIsScraping] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState<string>("");
   const [scrapeNotification, setScrapeNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -87,6 +90,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboard();
+    // Fetch user info
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.user?.name) setUserName(d.user.name);
+    }).catch(() => {});
   }, []);
 
   async function fetchDashboard() {
@@ -160,8 +167,14 @@ export default function DashboardPage() {
       const res = await fetch("/api/scrape", { method: "POST" });
       const result = await res.json();
       if (result.success) {
+        // Build platform breakdown string
+        const breakdown = result.breakdown || {};
+        const parts = Object.entries(breakdown)
+          .filter(([, count]) => (count as number) > 0)
+          .map(([platform, count]) => `${platform}: ${count}`);
+        const breakdownStr = parts.length > 0 ? ` (${parts.join(', ')})` : '';
         setScrapeNotification({
-          message: `${result.newCount} neue Artikel gefunden`,
+          message: `${result.newItems ?? result.newCount ?? 0} neue Artikel gefunden${breakdownStr}`,
           type: "success",
         });
         await fetchDashboard(); // Reload from DB
@@ -181,6 +194,11 @@ export default function DashboardPage() {
       setTimeout(() => setScrapeNotification(null), 6000);
     }
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }, [router]);
 
   const handleAnalyze = useCallback(async () => {
     setIsAnalyzing(true);
@@ -228,6 +246,8 @@ export default function DashboardPage() {
         isScraping={isScraping}
         onAnalyze={handleAnalyze}
         isAnalyzing={isAnalyzing}
+        userName={userName}
+        onLogout={handleLogout}
       />
 
       {/* Scrape / Analyze Notification */}

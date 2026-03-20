@@ -45,8 +45,11 @@ function rowToTopic(row: Row): Topic {
   };
 }
 
-export async function getAllMentions(): Promise<Mention[]> {
-  const result = await rawClient.execute('SELECT * FROM mentions ORDER BY created_at DESC');
+export async function getAllMentions(userId: string): Promise<Mention[]> {
+  const result = await rawClient.execute({
+    sql: 'SELECT * FROM mentions WHERE politician_id = ? ORDER BY created_at DESC',
+    args: [userId],
+  });
   return result.rows.map(rowToMention);
 }
 
@@ -66,11 +69,11 @@ export async function insertMention(mention: {
   authorUrl: string;
   engagementCount: number;
   createdAt: string;
-}) {
+}, userId: string) {
   return rawClient.execute({
     sql: 'INSERT OR IGNORE INTO mentions (id, politician_id, source_id, platform, title, url, content, author, author_url, sentiment, sentiment_score, is_viral, engagement_count, needs_response, tags, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     args: [
-      mention.id, 'default', mention.sourceId, mention.platform,
+      mention.id, userId, mention.sourceId, mention.platform,
       mention.title, mention.url, mention.content, mention.author,
       mention.authorUrl, 'neutral', 0, 0, mention.engagementCount,
       0, '[]', mention.createdAt
@@ -91,8 +94,11 @@ export async function updateMentionSentiment(id: string, data: {
   });
 }
 
-export async function getAllResponses(): Promise<Record<string, Response>> {
-  const result = await rawClient.execute('SELECT * FROM responses');
+export async function getAllResponses(userId: string): Promise<Record<string, Response>> {
+  const result = await rawClient.execute({
+    sql: 'SELECT r.* FROM responses r JOIN mentions m ON r.mention_id = m.id WHERE m.politician_id = ?',
+    args: [userId],
+  });
   const map: Record<string, Response> = {};
   for (const row of result.rows) {
     const r = rowToResponse(row);
@@ -124,23 +130,29 @@ export async function updateResponseImproved(mentionId: string, improvedText: st
   });
 }
 
-export async function getAllTopics(): Promise<Topic[]> {
-  const result = await rawClient.execute('SELECT * FROM topics ORDER BY mention_count DESC');
+export async function getAllTopics(userId: string): Promise<Topic[]> {
+  const result = await rawClient.execute({
+    sql: 'SELECT * FROM topics WHERE politician_id = ? ORDER BY mention_count DESC',
+    args: [userId],
+  });
   return result.rows.map(rowToTopic);
 }
 
-export async function replaceTopics(newTopics: { id: string; name: string; importance: string; mentionCount: number; trend: string; }[]) {
-  await rawClient.execute('DELETE FROM topics');
+export async function replaceTopics(newTopics: { id: string; name: string; importance: string; mentionCount: number; trend: string; }[], userId: string) {
+  await rawClient.execute({ sql: 'DELETE FROM topics WHERE politician_id = ?', args: [userId] });
   for (const t of newTopics) {
     await rawClient.execute({
       sql: 'INSERT INTO topics (id, politician_id, name, importance, mention_count, trend, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      args: [t.id, 'default', t.name, t.importance, t.mentionCount, t.trend, new Date().toISOString()],
+      args: [t.id, userId, t.name, t.importance, t.mentionCount, t.trend, new Date().toISOString()],
     });
   }
 }
 
-export async function getDashboardStats() {
-  const result = await rawClient.execute('SELECT sentiment, needs_response, engagement_count FROM mentions');
+export async function getDashboardStats(userId: string) {
+  const result = await rawClient.execute({
+    sql: 'SELECT sentiment, needs_response, engagement_count FROM mentions WHERE politician_id = ?',
+    args: [userId],
+  });
   const all = result.rows;
   const total = all.length;
   if (total === 0) return { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0, totalReach: 0 };
@@ -161,26 +173,29 @@ export async function getDashboardStats() {
   };
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
-  const settings = await getSettings();
+export async function getDashboardData(userId: string): Promise<DashboardData> {
+  const settings = await getSettings(userId);
   return {
     politician: {
-      id: 'default',
+      id: userId,
       name: settings.name,
       title: settings.title,
       keywords: settings.keywords,
       constituency: settings.constituency,
       sources: [],
     },
-    mentions: await getAllMentions(),
-    responses: await getAllResponses(),
-    topics: await getAllTopics(),
-    stats: await getDashboardStats(),
+    mentions: await getAllMentions(userId),
+    responses: await getAllResponses(userId),
+    topics: await getAllTopics(userId),
+    stats: await getDashboardStats(userId),
   };
 }
 
-export async function getMentionCount(): Promise<number> {
-  const result = await rawClient.execute('SELECT count(*) as cnt FROM mentions');
+export async function getMentionCount(userId: string): Promise<number> {
+  const result = await rawClient.execute({
+    sql: 'SELECT count(*) as cnt FROM mentions WHERE politician_id = ?',
+    args: [userId],
+  });
   return Number(result.rows[0]?.cnt ?? 0);
 }
 
@@ -200,7 +215,7 @@ export async function ensureSettingsTable() {
   )`);
 }
 
-export async function getSettings(): Promise<{
+export async function getSettings(userId: string): Promise<{
   name: string;
   title: string;
   constituency: string;
@@ -209,7 +224,7 @@ export async function getSettings(): Promise<{
   cantons: string[];
 }> {
   await ensureSettingsTable();
-  const result = await rawClient.execute("SELECT * FROM settings WHERE id = 'default'");
+  const result = await rawClient.execute({ sql: "SELECT * FROM settings WHERE id = ?", args: [userId] });
   if (result.rows[0]) {
     const row = result.rows[0];
     return {
@@ -239,10 +254,10 @@ export async function saveSettings(settings: {
   keywords: string[];
   language: string;
   cantons: string[];
-}) {
+}, userId: string) {
   await ensureSettingsTable();
   await rawClient.execute({
     sql: `INSERT OR REPLACE INTO settings (id, name, title, constituency, keywords, language, cantons) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: ['default', settings.name, settings.title, settings.constituency, JSON.stringify(settings.keywords), settings.language, JSON.stringify(settings.cantons)],
+    args: [userId, settings.name, settings.title, settings.constituency, JSON.stringify(settings.keywords), settings.language, JSON.stringify(settings.cantons)],
   });
 }

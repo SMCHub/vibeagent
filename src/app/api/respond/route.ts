@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateResponse } from '@/lib/ai/responder';
 import { getMentionById, insertResponse } from '@/lib/db/helpers';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { mentionId } = body as { mentionId: string };
 
@@ -15,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const mention = await getMentionById(mentionId);
-    if (!mention) {
+    if (!mention || mention.politicianId !== user.userId) {
       return NextResponse.json(
         { success: false, error: 'Erwähnung nicht gefunden' },
         { status: 404 },

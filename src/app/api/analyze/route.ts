@@ -6,10 +6,16 @@ import {
   updateMentionSentiment,
   replaceTopics,
 } from '@/lib/db/helpers';
+import { getUserFromRequest } from '@/lib/auth';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const allMentions = await getAllMentions();
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
+    }
+
+    const allMentions = await getAllMentions(user.userId);
 
     if (allMentions.length === 0) {
       return NextResponse.json({
@@ -56,7 +62,7 @@ export async function POST() {
 
     // Run topic extraction on ALL mentions (including previously analyzed ones)
     // so the topic radar reflects the full picture
-    const refreshedMentions = await getAllMentions();
+    const refreshedMentions = await getAllMentions(user.userId);
     const extractedTopics = await extractTopics(refreshedMentions);
     await replaceTopics(
       extractedTopics.map((t) => ({
@@ -66,6 +72,7 @@ export async function POST() {
         mentionCount: t.mentionCount,
         trend: t.trend,
       })),
+      user.userId,
     );
 
     return NextResponse.json({

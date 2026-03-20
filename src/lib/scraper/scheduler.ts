@@ -1,27 +1,39 @@
 // ---------------------------------------------------------------------------
 // Scraper Scheduler -- orchestrates all platform scrapers
 // ---------------------------------------------------------------------------
-// Install (for cron): npm install node-cron @types/node-cron
+// Matches the last30days-skill architecture:
+// - Twitter/X: bird cookie auth (free)
+// - Reddit, TikTok, Instagram: ScrapeCreators API (one key)
+// - YouTube: Data API v3 (free)
+// - Hacker News: Algolia API (free, no auth)
+// - RSS: Swiss news sources (free)
 
 import type { ScrapedItem } from './base';
 import { RssScraper } from './rss';
-import { FacebookScraper } from './facebook';
 import { TwitterScraper } from './twitter';
-import { InstagramScraper } from './instagram';
-import { YouTubeScraper } from './youtube';
-import { TikTokScraper } from './tiktok';
 import { RedditScraper } from './reddit';
+import { YouTubeScraper } from './youtube';
+import { FacebookScraper } from './facebook';
+import { InstagramScraper } from './instagram';
+import { TikTokScraper } from './tiktok';
+import { HackerNewsScraper } from './hackernews';
 
-// ---- Registry of all available scrapers ----------------------------------
-const ALL_SCRAPERS = [
-  new RssScraper(),
-  new FacebookScraper(),
-  new TwitterScraper(),
-  new InstagramScraper(),
-  new YouTubeScraper(),
-  new TikTokScraper(),
-  new RedditScraper(),
-];
+interface SchedulerOptions {
+  /** Primary language: 'de' | 'fr' | 'it' | 'rm' */
+  language?: string;
+  /** Canton codes to monitor (e.g. ['ZH', 'BE']) */
+  cantons?: string[];
+}
+
+interface SchedulerResult {
+  items: ScrapedItem[];
+  /** Per-platform breakdown: { platform: count } */
+  breakdown: Record<string, number>;
+  /** Scrapers that failed */
+  errors: { scraper: string; error: string }[];
+  /** Total duration in ms */
+  durationMs: number;
+}
 
 /**
  * Run every configured scraper in parallel and return the combined results.
@@ -31,58 +43,95 @@ const ALL_SCRAPERS = [
  * block the others.
  */
 export async function runAllScrapers(
-  keywords: string[]
-): Promise<ScrapedItem[]> {
-  const configured = ALL_SCRAPERS.filter((s) => s.isConfigured());
+  keywords: string[],
+  options?: SchedulerOptions,
+): Promise<SchedulerResult> {
+  const startTime = Date.now();
+
+  const allScrapers = [
+    // Always available (no auth needed)
+    new RssScraper({
+      language: options?.language,
+      cantons: options?.cantons,
+    }),
+    new HackerNewsScraper(),
+
+    // ScrapeCreators-powered (one key covers all three)
+    new RedditScraper(),
+    new TikTokScraper(),
+    new InstagramScraper(),
+
+    // bird cookie auth (free) or Twitter API v2 (paid fallback)
+    new TwitterScraper(),
+
+    // Free API key
+    new YouTubeScraper(),
+
+    // Meta Graph API (free, needs app review)
+    new FacebookScraper(),
+  ];
+
+  const configured = allScrapers.filter((s) => s.isConfigured());
 
   console.log(
-    `[Scheduler] Running ${configured.length}/${ALL_SCRAPERS.length} configured scrapers`
+    `[Scheduler] Running ${configured.length}/${allScrapers.length} configured scrapers: ${configured.map(s => s.name).join(', ')}`,
   );
 
   const results = await Promise.allSettled(
     configured.map((scraper) =>
       scraper.scrape(keywords).then((items) => {
         console.log(
-          `[Scheduler] ${scraper.name} returned ${items.length} items`
+          `[Scheduler] ${scraper.name} returned ${items.length} items`,
         );
-        return items;
-      })
-    )
+        return { name: scraper.name, platform: scraper.platform, items };
+      }),
+    ),
   );
 
   const combined: ScrapedItem[] = [];
+  const breakdown: Record<string, number> = {};
+  const errors: { scraper: string; error: string }[] = [];
 
-  for (const result of results) {
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
     if (result.status === 'fulfilled') {
-      combined.push(...result.value);
+      combined.push(...result.value.items);
+      breakdown[result.value.platform] = (breakdown[result.value.platform] || 0) + result.value.items.length;
     } else {
-      console.error('[Scheduler] Scraper failed:', result.reason);
+      const scraperName = configured[i].name;
+      const errorMsg = result.reason instanceof Error
+        ? result.reason.message
+        : String(result.reason);
+      errors.push({ scraper: scraperName, error: errorMsg });
+      console.error(`[Scheduler] ${scraperName} failed:`, errorMsg);
+    }
+  }
+
+  // Deduplicate across platforms by externalId
+  const seen = new Set<string>();
+  const deduped: ScrapedItem[] = [];
+  for (const item of combined) {
+    const key = `${item.platform}:${item.externalId}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(item);
     }
   }
 
   // Sort by most recent first
-  combined.sort(
-    (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()
+  deduped.sort(
+    (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime(),
   );
 
-  console.log(`[Scheduler] Total items collected: ${combined.length}`);
-  return combined;
-}
-
-/**
- * Start an automated scraping schedule.
- *
- * TODO (Phase 3):
- *  1. npm install node-cron
- *  2. import cron from 'node-cron'
- *  3. Schedule scraping at desired interval, e.g.:
- *     cron.schedule('0 * * * *', () => runAllScrapers(keywords))  // every hour
- *  4. Add rate-limit tracking per platform
- *  5. Store results in DB via drizzle insert
- *  6. Trigger sentiment analysis pipeline after each run
- */
-export function startSchedule(): void {
+  const durationMs = Date.now() - startTime;
   console.log(
-    '[Scheduler] startSchedule() is a stub -- implement with node-cron in Phase 3'
+    `[Scheduler] Done in ${durationMs}ms — ${combined.length} raw, ${deduped.length} deduped, ${errors.length} errors`,
   );
+
+  return {
+    items: deduped,
+    breakdown,
+    errors,
+    durationMs,
+  };
 }

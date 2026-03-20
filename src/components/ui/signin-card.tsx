@@ -165,11 +165,31 @@ export default function SignInCard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isHovered, setIsHovered] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Anmeldung fehlgeschlagen");
+        return;
+      }
+      router.push("/dashboard");
+    } catch {
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -223,8 +243,9 @@ export default function SignInCard() {
 
             <div className="mb-6">
               <button
-                className="w-full flex items-center justify-center gap-2 bg-muted border border-border rounded-lg p-3 hover:bg-accent transition-all duration-300 text-foreground shadow-sm"
-                onClick={() => router.push("/dashboard")}
+                className="w-full flex items-center justify-center gap-2 bg-muted border border-border rounded-lg p-3 hover:bg-accent transition-all duration-300 text-foreground shadow-sm opacity-60 cursor-not-allowed"
+                onClick={() => alert("Kommt bald")}
+                type="button"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fillOpacity=".54" />
@@ -286,6 +307,12 @@ export default function SignInCard() {
                 </div>
               </div>
 
+              {error && (
+                <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
@@ -295,16 +322,17 @@ export default function SignInCard() {
               >
                 <Button
                   type="submit"
+                  disabled={isLoading}
                   className={cn(
                     "w-full relative overflow-hidden py-2.5 rounded-lg transition-all duration-300",
                     isHovered ? "shadow-lg" : ""
                   )}
                 >
                   <span className="flex items-center justify-center">
-                    Anmelden
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {isLoading ? "Wird angemeldet..." : "Anmelden"}
+                    {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </span>
-                  {isHovered && (
+                  {isHovered && !isLoading && (
                     <motion.span
                       initial={{ left: "-100%" }}
                       animate={{ left: "100%" }}

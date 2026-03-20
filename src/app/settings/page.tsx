@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Settings, User, Key, Globe, Share2, Save, ArrowLeft, Check, MapPin, ChevronDown, Loader2 } from 'lucide-react'
+import { Settings, User, Globe, Share2, Save, ArrowLeft, Check, MapPin, ChevronDown, Loader2 } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -20,13 +20,6 @@ interface SocialPlatform {
   enabled: boolean
   description: string
   watchedAccounts: string
-}
-
-interface ApiKeyEntry {
-  id: string
-  label: string
-  value: string
-  placeholder: string
 }
 
 interface Canton {
@@ -276,27 +269,6 @@ export default function SettingsPage() {
     },
   ])
 
-  // API keys
-  const [apiKeys, setApiKeys] = useState<ApiKeyEntry[]>([
-    { id: 'OPENAI_API_KEY', label: 'OpenAI API Key', value: '', placeholder: 'sk-...' },
-    { id: 'META_ACCESS_TOKEN', label: 'Meta Access Token', value: '', placeholder: 'EAA...' },
-    {
-      id: 'TWITTER_BEARER_TOKEN',
-      label: 'Twitter Bearer Token',
-      value: '',
-      placeholder: 'AAAA...',
-    },
-    { id: 'YOUTUBE_API_KEY', label: 'YouTube API Key', value: '', placeholder: 'AIza...' },
-    { id: 'REDDIT_CLIENT_ID', label: 'Reddit Client ID', value: '', placeholder: 'Client ID' },
-    {
-      id: 'REDDIT_CLIENT_SECRET',
-      label: 'Reddit Client Secret',
-      value: '',
-      placeholder: 'Client Secret',
-    },
-    { id: 'TIKTOK_API_KEY', label: 'TikTok API Key', value: '', placeholder: 'API Key' },
-  ])
-
   // Toast state
   const [showToast, setShowToast] = useState(false)
 
@@ -381,10 +353,6 @@ export default function SettingsPage() {
     setPlatforms((prev) =>
       prev.map((p) => (p.id === id ? { ...p, watchedAccounts: value } : p)),
     )
-  }
-
-  const updateApiKey = (id: string, value: string) => {
-    setApiKeys((prev) => prev.map((k) => (k.id === id ? { ...k, value } : k)))
   }
 
   const handleSave = async () => {
@@ -857,45 +825,6 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-          </section>
-
-          {/* ── Section 5: API-Schlüssel ──────────────────────────────────── */}
-          <section className="rounded-xl border border-[#dadce0] bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50">
-                <Key className="h-5 w-5 text-[#ea8600]" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-[#202124]">API-Schlüssel</h2>
-                <p className="text-sm text-[#5f6368]">
-                  Zugangsdaten für externe Dienste und APIs
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {apiKeys.map((apiKey) => (
-                <div key={apiKey.id}>
-                  <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                    {apiKey.label}
-                    <span className="ml-2 font-mono text-xs text-[#80868b]">{apiKey.id}</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKey.value}
-                    onChange={(e) => updateApiKey(apiKey.id, e.target.value)}
-                    className={inputClasses}
-                    placeholder={apiKey.placeholder}
-                    autoComplete="off"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-4 text-xs text-[#80868b]">
-              API-Schlüssel werden verschlüsselt gespeichert und niemals im Klartext angezeigt.
-              Die Persistierung wird in Phase 3 implementiert.
-            </p>
           </section>
 
           {/* Save button */}

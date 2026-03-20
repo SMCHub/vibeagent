@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import { openai } from '@/lib/ai/client';
 import { STRATEGY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getAllMentions, getAllTopics, getDashboardStats } from '@/lib/db/helpers';
+import { getUserFromRequest } from '@/lib/auth';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const mentions = await getAllMentions();
-    const topics = await getAllTopics();
-    const stats = await getDashboardStats();
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
+    }
+
+    const mentions = await getAllMentions(user.userId);
+    const topics = await getAllTopics(user.userId);
+    const stats = await getDashboardStats(user.userId);
 
     // If the DB is empty, ask the user to scrape first
     if (mentions.length === 0) {

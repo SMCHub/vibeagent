@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { improveResponse } from '@/lib/ai/responder';
-import { getResponseByMentionId, updateResponseImproved } from '@/lib/db/helpers';
+import { getResponseByMentionId, updateResponseImproved, getMentionById } from '@/lib/db/helpers';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { mentionId, feedback } = body as {
       mentionId: string;
@@ -14,6 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'mentionId ist erforderlich' },
         { status: 400 },
+      );
+    }
+
+    // Verify the mention belongs to the user
+    const mention = await getMentionById(mentionId);
+    if (!mention || mention.politicianId !== user.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Erwähnung nicht gefunden' },
+        { status: 404 },
       );
     }
 
