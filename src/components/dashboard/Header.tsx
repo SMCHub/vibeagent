@@ -2,6 +2,7 @@
 
 import { Settings, RefreshCw, Loader2, Brain, BarChart3, MessageSquare, LayoutDashboard, Globe, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { clsx } from 'clsx';
 
 type Tab = 'summary' | 'mentions' | 'analysis' | 'sources';
@@ -43,12 +44,7 @@ export default function Header({
             href="/"
             className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-sm">
-              <span className="text-sm font-bold text-primary-foreground">V</span>
-            </div>
-            <span className="text-base font-semibold tracking-tight text-foreground">
-              VibeAgent
-            </span>
+            <Image src="/logo.png" alt="Vibe Agent" width={130} height={32} className="h-7 w-auto" />
           </Link>
 
           {/* Actions */}

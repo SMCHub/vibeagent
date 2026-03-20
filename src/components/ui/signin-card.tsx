@@ -5,6 +5,7 @@ import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 const cn = (...classes: string[]) => classes.filter(Boolean).join(" ");
 
@@ -211,18 +212,8 @@ export default function SignInCard() {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="mb-6"
               >
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#1a73e8] to-[#174ea6] flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-lg">V</span>
-                </div>
+                <Image src="/logo.png" alt="Vibe Agent" width={200} height={50} className="h-12 w-auto" />
               </motion.div>
-              <motion.h2
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-                className="text-3xl font-bold mb-2 text-center text-[#1a73e8]"
-              >
-                VibeAgent
-              </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}

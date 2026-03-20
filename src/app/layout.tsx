@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   title: "Morgen-Briefing — Politisches Monitoring",
   description:
     "Tägliches Dashboard für politisches Social-Media-Monitoring und Nachrichtenanalyse",
+  icons: {
+    icon: '/favicon.webp',
+    apple: '/favicon.webp',
+  },
 };
 
 export default function RootLayout({

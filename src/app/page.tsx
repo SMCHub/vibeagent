@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { Logos3 } from "@/components/blocks/logos3";
 import {
@@ -172,10 +173,7 @@ export default function LandingPage() {
         <nav className="mx-auto flex max-w-4xl items-center justify-between rounded-2xl border border-border/60 bg-card/75 px-5 py-2.5 shadow-lg shadow-black/[0.03] ring-1 ring-black/[0.02] backdrop-blur-xl transition-all duration-300">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-sm">
-              <span className="text-sm font-bold text-primary-foreground">V</span>
-            </div>
-            <span className="text-base font-semibold tracking-tight text-foreground">VibeAgent</span>
+            <Image src="/logo.png" alt="Vibe Agent" width={160} height={40} className="h-8 w-auto" />
           </Link>
 
           {/* Center Navigation */}
@@ -387,11 +385,8 @@ export default function LandingPage() {
       <footer className="border-t border-border bg-card px-6 py-16">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-4">
           <div>
-            <div className="mb-4 flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-                <span className="text-xs font-bold text-primary-foreground">V</span>
-              </div>
-              <span className="font-semibold">VibeAgent</span>
+            <div className="mb-4">
+              <Image src="/logo.png" alt="Vibe Agent" width={130} height={32} className="h-7 w-auto" />
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Politisches Monitoring
