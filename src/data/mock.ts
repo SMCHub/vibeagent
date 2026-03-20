@@ -371,5 +371,6 @@ export const mockDashboardData: DashboardData = {
     negativePct: Math.round((negativeMentions / totalMentions) * 100),
     neutralPct: Math.round((neutralMentions / totalMentions) * 100),
     needsResponse: needsResponseCount,
+    totalReach: mentions.reduce((sum, m) => sum + m.engagementCount, 0),
   },
 };

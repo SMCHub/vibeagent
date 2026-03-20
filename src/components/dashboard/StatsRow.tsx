@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, ThumbsUp, ThumbsDown, Reply, TrendingUp, TrendingDown } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, Reply, TrendingUp, TrendingDown, Eye } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface StatsRowProps {
@@ -10,7 +10,14 @@ interface StatsRowProps {
     negativePct: number;
     neutralPct: number;
     needsResponse: number;
+    totalReach: number;
   };
+}
+
+function formatReach(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(value);
 }
 
 interface StatCardProps {
@@ -60,7 +67,7 @@ function StatCard({ label, value, icon: Icon, iconColor, iconBg, trend }: StatCa
 
 export default function StatsRow({ stats }: StatsRowProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <StatCard
         label="Erwähnungen"
         value={stats.totalMentions}
@@ -92,6 +99,14 @@ export default function StatsRow({ stats }: StatsRowProps) {
         iconColor="#fbbc04"
         iconBg="bg-[#fef7e0]"
         trend={{ value: 2, isPositive: false }}
+      />
+      <StatCard
+        label="Reichweite"
+        value={formatReach(stats.totalReach)}
+        icon={Eye}
+        iconColor="#8b5cf6"
+        iconBg="bg-[#ede9fe]"
+        trend={{ value: 5, isPositive: true }}
       />
     </div>
   );

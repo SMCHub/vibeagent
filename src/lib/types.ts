@@ -101,5 +101,6 @@ export interface DashboardData {
     negativePct: number;
     neutralPct: number;
     needsResponse: number;
+    totalReach: number;
   };
 }

@@ -1,15 +1,6 @@
 import { NextResponse } from 'next/server';
 import { RssScraper } from '@/lib/scraper/rss';
-import { insertMention, getMentionCount } from '@/lib/db/helpers';
-
-const DEFAULT_KEYWORDS = [
-  'Müller',
-  'Gemeinderat',
-  'Zürich',
-  'Verkehr',
-  'Wohnen',
-  'Klimaschutz',
-];
+import { insertMention, getMentionCount, getSettings } from '@/lib/db/helpers';
 
 /** Overall request timeout (90 seconds). */
 const SCRAPE_TIMEOUT_MS = 90_000;
@@ -28,13 +19,17 @@ export async function POST() {
   const startTime = Date.now();
 
   try {
+    const settings = await getSettings();
+    const keywords = settings.keywords.length > 0 ? settings.keywords : ['Zürich', 'Gemeinderat'];
+
     const scraper = new RssScraper({
-      language: 'de',
+      language: settings.language,
+      cantons: settings.cantons,
     });
 
     // Race the scrape against a hard timeout
     const items = await Promise.race([
-      scraper.scrape(DEFAULT_KEYWORDS),
+      scraper.scrape(keywords),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error('Scrape timed out after 90 seconds')),

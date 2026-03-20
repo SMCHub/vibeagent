@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Settings, User, Key, Globe, Share2, Save, ArrowLeft, Check, MapPin, ChevronDown } from 'lucide-react'
+import { Settings, User, Key, Globe, Share2, Save, ArrowLeft, Check, MapPin, ChevronDown, Loader2 } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -124,18 +124,79 @@ const REGIONAL_SOURCES: { id: string; label: string; cantons: string[] }[] = [
   { id: 'la-liberte', label: 'La Liberté', cantons: ['FR'] },
 ]
 
+// ── Language mapping helpers ─────────────────────────────────────────────────
+
+const LANGUAGE_CODE_TO_DISPLAY: Record<string, string> = {
+  de: 'Deutsch',
+  fr: 'Fran\u00e7ais',
+  it: 'Italiano',
+  rm: 'Rumantsch',
+}
+
+const LANGUAGE_DISPLAY_TO_CODE: Record<string, string> = {
+  Deutsch: 'de',
+  'Fran\u00e7ais': 'fr',
+  Italiano: 'it',
+  Rumantsch: 'rm',
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
+  // Loading state
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+
   // Politician profile
-  const [name, setName] = useState('Thomas Müller')
+  const [name, setName] = useState('Thomas M\u00fcller')
   const [title, setTitle] = useState('Gemeinderat')
-  const [constituency, setConstituency] = useState('Zürich (ZH)')
-  const [keywords, setKeywords] = useState('Müller, Gemeinderat, Zürich, Verkehrspolitik')
+  const [constituency, setConstituency] = useState('Z\u00fcrich (ZH)')
+  const [keywords, setKeywords] = useState('M\u00fcller, Gemeinderat, Z\u00fcrich, Verkehrspolitik')
   const [language, setLanguage] = useState('Deutsch')
 
   // Canton selection
   const [selectedCantons, setSelectedCantons] = useState<Set<string>>(new Set(['ZH']))
+
+  // ── Load settings from API on mount ──────────────────────────────────────
+  const loadSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings')
+      if (!res.ok) throw new Error('Failed to load settings')
+      const data = await res.json()
+      setName(data.name || 'Thomas M\u00fcller')
+      setTitle(data.title || 'Gemeinderat')
+      // Map constituency back to dropdown format "Name (CODE)"
+      const constituencyValue = data.constituency || 'Stadt Z\u00fcrich'
+      const matchedCanton = SWISS_CANTONS.find(
+        (c) => c.name === constituencyValue || constituencyValue.includes(c.code),
+      )
+      if (matchedCanton) {
+        setConstituency(`${matchedCanton.name} (${matchedCanton.code})`)
+      } else {
+        // Try to find by matching the raw value against the dropdown options
+        const dropdownMatch = CANTON_DROPDOWN.find((opt) => opt.includes(constituencyValue))
+        setConstituency(dropdownMatch || CANTON_DROPDOWN[0])
+      }
+      // Keywords: join array to comma-separated string
+      if (Array.isArray(data.keywords) && data.keywords.length > 0) {
+        setKeywords(data.keywords.join(', '))
+      }
+      // Language: map code to display name
+      setLanguage(LANGUAGE_CODE_TO_DISPLAY[data.language] || 'Deutsch')
+      // Cantons
+      if (Array.isArray(data.cantons) && data.cantons.length > 0) {
+        setSelectedCantons(new Set(data.cantons))
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   // National news sources
   const [nationalSources, setNationalSources] = useState<{ id: string; label: string; enabled: boolean }[]>([
@@ -326,10 +387,47 @@ export default function SettingsPage() {
     setApiKeys((prev) => prev.map((k) => (k.id === id ? { ...k, value } : k)))
   }
 
-  const handleSave = () => {
-    // Phase 3: Persist settings to backend / .env
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      // Extract canton code from constituency dropdown value e.g. "Zürich (ZH)" -> "Stadt Zürich"
+      const constituencyMatch = constituency.match(/^(.+?)\s*\(/)
+      const constituencyValue = constituencyMatch ? constituencyMatch[1].trim() : constituency
+
+      // Convert language display name to code
+      const languageCode = LANGUAGE_DISPLAY_TO_CODE[language] || 'de'
+
+      // Split keywords string into array
+      const keywordsArray = keywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0)
+
+      const payload = {
+        name,
+        title,
+        constituency: constituencyValue,
+        keywords: keywordsArray,
+        language: languageCode,
+        cantons: Array.from(selectedCantons),
+      }
+
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) throw new Error('Failed to save settings')
+
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 3000)
+    } catch (err) {
+      console.error('Failed to save settings:', err)
+      alert('Fehler beim Speichern der Einstellungen')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const inputClasses =
@@ -337,6 +435,17 @@ export default function SettingsPage() {
 
   const selectClasses =
     'w-full bg-white border border-[#dadce0] text-[#202124] rounded-lg p-2.5 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors appearance-none cursor-pointer'
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f9fa]">
+        <div className="flex items-center gap-3 text-[#5f6368]">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-sm">Einstellungen werden geladen...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#202124]">
@@ -794,10 +903,15 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={handleSave}
-              className="flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#1765cc] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 focus:ring-offset-[#f8f9fa]"
+              disabled={isSaving}
+              className="flex items-center gap-2 rounded-full bg-[#1a73e8] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#1765cc] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-offset-2 focus:ring-offset-[#f8f9fa] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Save className="h-4 w-4" />
-              Speichern
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isSaving ? 'Wird gespeichert...' : 'Speichern'}
             </button>
           </div>
         </div>

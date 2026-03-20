@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Newspaper,
   Share2,
@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Settings,
+  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
@@ -20,6 +21,8 @@ import {
   SOCIAL_MEDIA_TARGETS,
   CANTONS,
 } from '@/lib/sources/switzerland';
+import SourceBadge from './SourceBadge';
+import type { Mention, Platform } from '@/lib/types';
 
 interface SummaryCardProps {
   label: string;
@@ -47,12 +50,31 @@ function SummaryCard({ label, value, icon: Icon, iconColor, iconBg }: SummaryCar
   );
 }
 
-export default function SourcesTab() {
+interface SourcesTabProps {
+  mentions?: Mention[];
+}
+
+export default function SourcesTab({ mentions = [] }: SourcesTabProps) {
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set(['national']));
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set(['reddit']));
 
   // Unique languages
   const languages = new Set(NEWS_SOURCES.map((s) => s.language));
+
+  // Top sources that produced the most mentions
+  const topMentionSources = useMemo(() => {
+    const counts: Record<string, { count: number; platform: Platform }> = {};
+    for (const m of mentions) {
+      const key = m.sourceId;
+      if (!counts[key]) counts[key] = { count: 0, platform: m.platform };
+      counts[key].count++;
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 10);
+  }, [mentions]);
+
+  const uniqueSourcesWithMentions = topMentionSources.length;
 
   // Group news sources by region
   const newsByRegion: Record<string, typeof NEWS_SOURCES> = {};
@@ -141,6 +163,53 @@ export default function SourcesTab() {
           iconBg="bg-purple-50"
         />
       </div>
+
+      {/* Meistgenannte Quellen */}
+      {mentions.length > 0 && (
+        <div className="rounded-xl border border-[#dadce0] bg-white">
+          <div className="border-b border-[#dadce0] px-6 py-4">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-[#202124]">
+              <TrendingUp className="h-5 w-5 text-[#1a73e8]" />
+              Meistgenannte Quellen
+            </h3>
+            <p className="mt-1 text-sm text-[#5f6368]">
+              {uniqueSourcesWithMentions} Quellen haben Erwähnungen geliefert
+            </p>
+          </div>
+          <div className="px-6 py-4">
+            {topMentionSources.length === 0 ? (
+              <p className="text-sm text-[#5f6368]">Noch keine Erwähnungen vorhanden.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-[#5f6368]">
+                    <th className="pb-2 font-medium">#</th>
+                    <th className="pb-2 font-medium">Quelle</th>
+                    <th className="pb-2 font-medium">Plattform</th>
+                    <th className="pb-2 text-right font-medium">Erwähnungen</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f1f3f4]">
+                  {topMentionSources.map(([sourceId, { count, platform }], idx) => (
+                    <tr key={sourceId}>
+                      <td className="py-2.5 text-[#5f6368]">{idx + 1}</td>
+                      <td className="py-2.5 font-medium text-[#202124]">{sourceId}</td>
+                      <td className="py-2.5">
+                        <SourceBadge platform={platform} />
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <span className="rounded-full bg-[#e8f0fe] px-2.5 py-0.5 text-xs font-medium text-[#1a73e8]">
+                          {count}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* News Sources */}
       <div className="rounded-xl border border-[#dadce0] bg-white">

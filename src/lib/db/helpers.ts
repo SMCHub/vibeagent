@@ -140,15 +140,16 @@ export async function replaceTopics(newTopics: { id: string; name: string; impor
 }
 
 export async function getDashboardStats() {
-  const result = await rawClient.execute('SELECT sentiment, needs_response FROM mentions');
+  const result = await rawClient.execute('SELECT sentiment, needs_response, engagement_count FROM mentions');
   const all = result.rows;
   const total = all.length;
-  if (total === 0) return { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0 };
+  if (total === 0) return { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0, totalReach: 0 };
 
   const positive = all.filter(m => m.sentiment === 'positive').length;
   const negative = all.filter(m => m.sentiment === 'negative').length;
   const neutral = all.filter(m => m.sentiment === 'neutral').length;
   const needsResponse = all.filter(m => m.needs_response).length;
+  const totalReach = all.reduce((sum, m) => sum + Number(m.engagement_count || 0), 0);
 
   return {
     totalMentions: total,
@@ -156,17 +157,19 @@ export async function getDashboardStats() {
     negativePct: Math.round((negative / total) * 100),
     neutralPct: Math.round((neutral / total) * 100),
     needsResponse,
+    totalReach,
   };
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
+  const settings = await getSettings();
   return {
     politician: {
       id: 'default',
-      name: 'Thomas Müller',
-      title: 'Gemeinderat',
-      keywords: ['Müller', 'Gemeinderat', 'Zürich', 'Mitte', 'Verkehr', 'Wohnen'],
-      constituency: 'Stadt Zürich',
+      name: settings.name,
+      title: settings.title,
+      keywords: settings.keywords,
+      constituency: settings.constituency,
       sources: [],
     },
     mentions: await getAllMentions(),
@@ -179,4 +182,67 @@ export async function getDashboardData(): Promise<DashboardData> {
 export async function getMentionCount(): Promise<number> {
   const result = await rawClient.execute('SELECT count(*) as cnt FROM mentions');
   return Number(result.rows[0]?.cnt ?? 0);
+}
+
+// ---------------------------------------------------------------------------
+// Settings persistence
+// ---------------------------------------------------------------------------
+
+export async function ensureSettingsTable() {
+  await rawClient.execute(`CREATE TABLE IF NOT EXISTS settings (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL DEFAULT 'Thomas Müller',
+    title TEXT NOT NULL DEFAULT 'Gemeinderat',
+    constituency TEXT NOT NULL DEFAULT 'Stadt Zürich',
+    keywords TEXT NOT NULL DEFAULT '[]',
+    language TEXT NOT NULL DEFAULT 'de',
+    cantons TEXT NOT NULL DEFAULT '["ZH"]'
+  )`);
+}
+
+export async function getSettings(): Promise<{
+  name: string;
+  title: string;
+  constituency: string;
+  keywords: string[];
+  language: string;
+  cantons: string[];
+}> {
+  await ensureSettingsTable();
+  const result = await rawClient.execute("SELECT * FROM settings WHERE id = 'default'");
+  if (result.rows[0]) {
+    const row = result.rows[0];
+    return {
+      name: String(row.name || 'Thomas Müller'),
+      title: String(row.title || 'Gemeinderat'),
+      constituency: String(row.constituency || 'Stadt Zürich'),
+      keywords: JSON.parse(String(row.keywords || '[]')),
+      language: String(row.language || 'de'),
+      cantons: JSON.parse(String(row.cantons || '["ZH"]')),
+    };
+  }
+  // Return defaults
+  return {
+    name: 'Thomas Müller',
+    title: 'Gemeinderat',
+    constituency: 'Stadt Zürich',
+    keywords: ['Müller', 'Gemeinderat', 'Zürich', 'Verkehr', 'Wohnen', 'Klimaschutz'],
+    language: 'de',
+    cantons: ['ZH'],
+  };
+}
+
+export async function saveSettings(settings: {
+  name: string;
+  title: string;
+  constituency: string;
+  keywords: string[];
+  language: string;
+  cantons: string[];
+}) {
+  await ensureSettingsTable();
+  await rawClient.execute({
+    sql: `INSERT OR REPLACE INTO settings (id, name, title, constituency, keywords, language, cantons) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: ['default', settings.name, settings.title, settings.constituency, JSON.stringify(settings.keywords), settings.language, JSON.stringify(settings.cantons)],
+  });
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { Heart, Sparkles, Copy, Check, RefreshCw, MessageSquare, ExternalLink, Reply } from 'lucide-react';
+import { Heart, Sparkles, Copy, Check, RefreshCw, MessageSquare, ExternalLink, Reply, Tag } from 'lucide-react';
 import type { Mention, Response } from '@/lib/types';
 import SourceBadge from './SourceBadge';
 
@@ -49,6 +49,18 @@ export default function CommentCard({
   onImproveResponse,
 }: CommentCardProps) {
   const [copied, setCopied] = useState(false);
+  const [showTagInput, setShowTagInput] = useState(false);
+  const [tagValue, setTagValue] = useState('');
+  const [localTags, setLocalTags] = useState<string[]>(mention.tags ?? []);
+
+  const handleAddTag = () => {
+    const trimmed = tagValue.trim();
+    if (trimmed && !localTags.includes(trimmed)) {
+      setLocalTags((prev) => [...prev, trimmed]);
+    }
+    setTagValue('');
+    setShowTagInput(false);
+  };
 
   const sentiment = sentimentMeta[mention.sentiment] ?? sentimentMeta.neutral;
 
@@ -92,19 +104,47 @@ export default function CommentCard({
         )}
       </div>
 
-      {/* Sentiment indicator */}
+      {/* Sentiment indicator + Tag button */}
       <div className="mt-2 flex items-center gap-1.5">
         <span className={clsx('inline-block h-2.5 w-2.5 rounded-full', sentiment.dotColor)} />
         <span className={clsx('text-xs font-medium', sentiment.textColor)}>{sentiment.label}</span>
+        <button
+          onClick={() => setShowTagInput((prev) => !prev)}
+          className="ml-2 inline-flex items-center gap-1 rounded-md border border-[#dadce0] px-2 py-0.5 text-[11px] font-medium text-[#5f6368] transition-colors hover:border-[#1a73e8] hover:text-[#1a73e8]"
+        >
+          <Tag className="h-3 w-3" />
+          Tag
+        </button>
       </div>
 
+      {/* Inline Tag Input */}
+      {showTagInput && (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="text"
+            value={tagValue}
+            onChange={(e) => setTagValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(); }}
+            placeholder="Tag eingeben..."
+            className="rounded-md border border-[#dadce0] px-2.5 py-1 text-xs text-[#202124] placeholder:text-[#9aa0a6] focus:border-[#1a73e8] focus:outline-none"
+            autoFocus
+          />
+          <button
+            onClick={handleAddTag}
+            className="rounded-md bg-[#1a73e8] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#174ea6]"
+          >
+            Hinzufügen
+          </button>
+        </div>
+      )}
+
       {/* Tags */}
-      {mention.tags && mention.tags.length > 0 && (
+      {localTags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {mention.tags.map((tag) => (
+          {localTags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-[#f1f3f4] px-2.5 py-0.5 text-[11px] font-medium text-[#5f6368]"
+              className="rounded-full bg-[#e8f0fe] px-2.5 py-0.5 text-[11px] font-medium text-[#1a73e8]"
             >
               {tag}
             </span>

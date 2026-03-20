@@ -2,11 +2,36 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { clsx } from 'clsx';
-import { MessageSquare, Search, X } from 'lucide-react';
-import type { Mention, Response } from '@/lib/types';
+import {
+  MessageSquare,
+  Search,
+  X,
+  Globe,
+  Facebook,
+  Twitter,
+  Camera,
+  Play,
+  Music,
+  MessageCircle,
+  Newspaper,
+  Linkedin,
+} from 'lucide-react';
+import type { Mention, Response, Platform } from '@/lib/types';
 import CommentCard from './CommentCard';
 
 type Filter = 'all' | 'positive' | 'negative' | 'neutral' | 'needsResponse';
+
+const platformOptions: { key: Platform | 'all'; label: string; icon: React.ElementType; color: string }[] = [
+  { key: 'all', label: 'Alle', icon: Globe, color: '#5f6368' },
+  { key: 'news', label: 'News', icon: Newspaper, color: '#5f6368' },
+  { key: 'facebook', label: 'Facebook', icon: Facebook, color: '#1877F2' },
+  { key: 'twitter', label: 'Twitter', icon: Twitter, color: '#1DA1F2' },
+  { key: 'instagram', label: 'Instagram', icon: Camera, color: '#E4405F' },
+  { key: 'youtube', label: 'YouTube', icon: Play, color: '#FF0000' },
+  { key: 'reddit', label: 'Reddit', icon: MessageCircle, color: '#FF4500' },
+  { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: '#0A66C2' },
+  { key: 'tiktok', label: 'TikTok', icon: Music, color: '#00F2EA' },
+];
 
 interface CommentListProps {
   mentions: Mention[];
@@ -41,6 +66,7 @@ export default function CommentList({
   onImproveResponse,
 }: CommentListProps) {
   const [activeFilter, setActiveFilter] = useState<Filter>('all');
+  const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedQuery = useDebounce(searchQuery, 250);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +94,9 @@ export default function CommentList({
     })();
 
     if (!passesSentiment) return false;
+
+    // Platform filter
+    if (platformFilter !== 'all' && m.platform !== platformFilter) return false;
 
     // Keyword filter
     if (debouncedQuery.trim() === '') return true;
@@ -97,32 +126,59 @@ export default function CommentList({
         </h2>
       </div>
 
-      {/* Keyword search input */}
-      <div className="mt-3 w-full max-w-sm">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5f6368]" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Nach Stichwort filtern..."
-            className="w-full rounded-lg border border-[#dadce0] bg-white py-2 pl-9 pr-9 text-sm text-[#202124] placeholder-[#a0a0a0] outline-none transition-colors focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
-          />
-          {searchQuery !== '' && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded p-0.5 text-[#5f6368] transition-colors hover:text-[#202124]"
-              aria-label="Suche zurücksetzen"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+      {/* Keyword search + Platform filter row */}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        {/* Keyword search input */}
+        <div className="w-full max-w-sm">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5f6368]" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Nach Stichwort filtern..."
+              className="w-full rounded-lg border border-[#dadce0] bg-white py-2 pl-9 pr-9 text-sm text-[#202124] placeholder-[#a0a0a0] outline-none transition-colors focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
+            />
+            {searchQuery !== '' && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded p-0.5 text-[#5f6368] transition-colors hover:text-[#202124]"
+                aria-label="Suche zurücksetzen"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Active filter indicator */}
-        {isSearchActive && (
-          <div className="mt-2 flex items-center gap-1.5">
+        {/* Platform filter icon buttons */}
+        <div className="flex items-center gap-1">
+          {platformOptions.map(({ key, label, icon: Icon, color }) => (
+            <button
+              key={key}
+              onClick={() => setPlatformFilter(key)}
+              title={label}
+              className={clsx(
+                'flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition-all',
+                platformFilter === key
+                  ? 'border-[#1a73e8] bg-[#e8f0fe] shadow-sm'
+                  : 'border-transparent bg-white hover:bg-[#f1f3f4]',
+              )}
+            >
+              <Icon
+                className="h-4 w-4"
+                style={{ color: platformFilter === key ? color : '#9aa0a6' }}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Active filter indicators */}
+      {(isSearchActive || platformFilter !== 'all') && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {isSearchActive && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e8f0fe] px-2.5 py-1 text-xs font-medium text-[#1a73e8]">
               Gefiltert nach: {debouncedQuery}
               <button
@@ -133,9 +189,21 @@ export default function CommentList({
                 <X className="h-3 w-3" />
               </button>
             </span>
-          </div>
-        )}
-      </div>
+          )}
+          {platformFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e8f0fe] px-2.5 py-1 text-xs font-medium text-[#1a73e8]">
+              Plattform: {platformOptions.find((p) => p.key === platformFilter)?.label}
+              <button
+                onClick={() => setPlatformFilter('all')}
+                className="cursor-pointer rounded-full p-0.5 transition-colors hover:bg-[#f0c890]"
+                aria-label="Plattform-Filter entfernen"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Filter tabs - Brand24 style */}
       <div className="mt-3 flex gap-0 border-b border-[#dadce0]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Header from "@/components/dashboard/Header";
 import SummaryTab from "@/components/dashboard/SummaryTab";
 import CommentList from "@/components/dashboard/CommentList";
@@ -20,29 +20,6 @@ import {
 
 type Tab = "summary" | "mentions" | "analysis" | "sources";
 
-// Mock chart data for the Mentions tab
-const mentionVolumeData = [
-  { date: "12 Mär", count: 3 },
-  { date: "13 Mär", count: 5 },
-  { date: "14 Mär", count: 2 },
-  { date: "15 Mär", count: 7 },
-  { date: "16 Mär", count: 4 },
-  { date: "17 Mär", count: 8 },
-  { date: "18 Mär", count: 6 },
-  { date: "19 Mär", count: 10 },
-];
-
-const sentimentTimeData = [
-  { date: "12 Mär", positive: 1, negative: 1, neutral: 1 },
-  { date: "13 Mär", positive: 2, negative: 2, neutral: 1 },
-  { date: "14 Mär", positive: 1, negative: 0, neutral: 1 },
-  { date: "15 Mär", positive: 3, negative: 2, neutral: 2 },
-  { date: "16 Mär", positive: 2, negative: 1, neutral: 1 },
-  { date: "17 Mär", positive: 3, negative: 3, neutral: 2 },
-  { date: "18 Mär", positive: 2, negative: 2, neutral: 2 },
-  { date: "19 Mär", positive: 4, negative: 3, neutral: 3 },
-];
-
 const emptyData: DashboardData = {
   politician: {
     id: 'default',
@@ -55,7 +32,7 @@ const emptyData: DashboardData = {
   mentions: [],
   responses: {},
   topics: [],
-  stats: { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0 },
+  stats: { totalMentions: 0, positivePct: 0, negativePct: 0, neutralPct: 0, needsResponse: 0, totalReach: 0 },
 };
 
 export default function DashboardPage() {
@@ -69,6 +46,44 @@ export default function DashboardPage() {
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
+
+  // Compute mention volume over time from real data (last 7 days)
+  const mentionVolumeData = useMemo(() => {
+    const days: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      days[key] = 0;
+    }
+    for (const m of data.mentions) {
+      const d = new Date(m.createdAt);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      if (key in days) days[key]++;
+    }
+    return Object.entries(days).map(([date, count]) => ({ date, count }));
+  }, [data.mentions]);
+
+  // Compute sentiment over time from real data (last 7 days)
+  const sentimentTimeData = useMemo(() => {
+    const days: Record<string, { positive: number; negative: number; neutral: number }> = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      days[key] = { positive: 0, negative: 0, neutral: 0 };
+    }
+    for (const m of data.mentions) {
+      const d = new Date(m.createdAt);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      if (key in days && (m.sentiment === 'positive' || m.sentiment === 'negative' || m.sentiment === 'neutral')) {
+        days[key][m.sentiment]++;
+      }
+    }
+    return Object.entries(days).map(([date, counts]) => ({ date, ...counts }));
+  }, [data.mentions]);
 
   useEffect(() => {
     fetchDashboard();
@@ -440,7 +455,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sources Tab */}
-        {!isLoading && activeTab === "sources" && <SourcesTab />}
+        {!isLoading && activeTab === "sources" && <SourcesTab mentions={data.mentions} />}
       </main>
 
       {/* Footer */}

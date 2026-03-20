@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -9,7 +10,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Calendar, Bell, Sparkles, Loader2 } from 'lucide-react';
+import { clsx } from 'clsx';
 import StatsRow from './StatsRow';
 import TopicRadar from './TopicRadar';
 import CommentCard from './CommentCard';
@@ -22,17 +24,25 @@ interface SummaryTabProps {
   onImproveResponse: (mentionId: string) => void;
 }
 
-// Mock time-series data for mentions over time
-const mentionsOverTime = [
-  { date: '12 Mär', mentions: 3, reach: 450 },
-  { date: '13 Mär', mentions: 5, reach: 1200 },
-  { date: '14 Mär', mentions: 2, reach: 320 },
-  { date: '15 Mär', mentions: 7, reach: 2800 },
-  { date: '16 Mär', mentions: 4, reach: 980 },
-  { date: '17 Mär', mentions: 8, reach: 6500 },
-  { date: '18 Mär', mentions: 6, reach: 3200 },
-  { date: '19 Mär', mentions: 10, reach: 4100 },
-];
+/** Returns a German relative-time string. */
+function timeAgoDE(date: Date): string {
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHrs = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  if (diffMin < 1) return 'gerade eben';
+  if (diffMin < 60) return `vor ${diffMin} Minuten`;
+  if (diffHrs < 24) return `vor ${diffHrs} Stunden`;
+  if (diffDays < 7) return `vor ${diffDays} Tagen`;
+
+  return date.toLocaleDateString('de-DE', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
 
 function formatGermanDate(date: Date): string {
   return date.toLocaleDateString('de-DE', {
@@ -48,6 +58,26 @@ export default function SummaryTab({
   onGenerateResponse,
   onImproveResponse,
 }: SummaryTabProps) {
+  // Compute mentions over time from real data (last 7 days)
+  const mentionsOverTime = useMemo(() => {
+    const days: Record<string, number> = {};
+    const now = new Date();
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      days[key] = 0;
+    }
+    // Count mentions per day
+    for (const m of data.mentions) {
+      const d = new Date(m.createdAt);
+      const key = d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      if (key in days) days[key]++;
+    }
+    return Object.entries(days).map(([date, mentions]) => ({ date, mentions }));
+  }, [data.mentions]);
+
   const firstName = data.politician.name.split(' ')[0];
   const viralCrisis = data.mentions.find(
     (m) =>
@@ -80,8 +110,54 @@ export default function SummaryTab({
         )
       : null;
 
+  // AI Summary state
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+
+  const handleGenerateSummary = async () => {
+    setIsLoadingSummary(true);
+    try {
+      const res = await fetch('/api/strategy', { method: 'POST' });
+      const result = await res.json();
+      if (result.success) setAiSummary(result.strategy);
+    } catch {
+      // silently handle errors
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
+
   return (
     <div className="tab-content-enter space-y-6">
+      {/* Activity Feed */}
+      {data.mentions.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Bell className="h-4 w-4 text-primary" />
+            Aktuelle Aktivität
+          </h3>
+          <div className="space-y-2">
+            {data.mentions.slice(0, 5).map((m) => (
+              <div key={m.id} className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                <span className={clsx(
+                  'h-2 w-2 rounded-full shrink-0',
+                  m.sentiment === 'positive' ? 'bg-[#34a853]' :
+                  m.sentiment === 'negative' ? 'bg-[#ea4335]' : 'bg-[#5f6368]'
+                )} />
+                <span className="truncate text-muted-foreground">
+                  <span className="font-medium text-foreground">{m.author}</span>
+                  {' — '}
+                  {m.content.slice(0, 80)}...
+                </span>
+                <span className="ml-auto shrink-0 text-xs text-muted-foreground" suppressHydrationWarning>
+                  {timeAgoDE(new Date(m.createdAt))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Greeting */}
       <div className="flex items-center justify-between">
         <div>
@@ -105,6 +181,39 @@ export default function SummaryTab({
 
       {/* KPI Cards */}
       <StatsRow stats={data.stats} />
+
+      {/* AI Summary */}
+      <div className="chart-container">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-[#1a73e8]" />
+            KI-Zusammenfassung
+          </h3>
+          <button
+            onClick={handleGenerateSummary}
+            disabled={isLoadingSummary}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#1a73e8] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#1557b0] disabled:opacity-60"
+          >
+            {isLoadingSummary ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Wird generiert...
+              </>
+            ) : (
+              'Zusammenfassung generieren'
+            )}
+          </button>
+        </div>
+        {aiSummary ? (
+          <div className="prose prose-sm max-w-none text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+            {aiSummary}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Klicken Sie auf &quot;Zusammenfassung generieren&quot; für eine KI-gestützte Zusammenfassung der aktuellen Lage.
+          </p>
+        )}
+      </div>
 
       {/* Crisis Alert */}
       {viralCrisis && (
