@@ -12,7 +12,11 @@ export function proxy(request: NextRequest) {
     pathname === '/signup' ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon')
+    pathname.startsWith('/favicon') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.webp') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.ico')
   ) {
     // If logged in and visiting login/signup, redirect to dashboard
     if (session && (pathname === '/login' || pathname === '/signup')) {
