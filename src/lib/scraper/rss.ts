@@ -469,8 +469,11 @@ export class RssScraper implements BaseScraper {
    * Keep only items that are relevant based on keyword matching.
    *
    * An article passes if:
-   *  - It matches at least 1 keyword in the title, OR
-   *  - It matches at least 2 keywords in the combined title + content.
+   *  - It matches at least 1 keyword (or keyword part) in the title, OR
+   *  - It matches at least 2 keyword parts in the combined title + content.
+   *
+   * Multi-word keywords (e.g. "Perparim Avdili") are split so that
+   * individual words ("Avdili") can also match.
    *
    * Articles matching any blocklist term are always excluded.
    */
@@ -478,7 +481,19 @@ export class RssScraper implements BaseScraper {
     items: ScrapedItem[],
     keywords: string[]
   ): ScrapedItem[] {
-    const lowerKeywords = keywords.map((k) => k.toLowerCase());
+    // Build search terms: full keywords + individual words from multi-word keywords
+    const searchTerms = new Set<string>();
+    for (const kw of keywords) {
+      const lower = kw.toLowerCase().trim();
+      if (!lower) continue;
+      searchTerms.add(lower);
+      // Split multi-word keywords into individual words (min 3 chars to avoid noise)
+      const words = lower.split(/\s+/).filter((w) => w.length >= 3);
+      for (const word of words) {
+        searchTerms.add(word);
+      }
+    }
+    const terms = Array.from(searchTerms);
 
     return items.filter((item) => {
       const lowerTitle = item.title.toLowerCase();
@@ -492,19 +507,19 @@ export class RssScraper implements BaseScraper {
         return false;
       }
 
-      // Count keyword matches in title only
-      const titleMatches = lowerKeywords.filter((kw) =>
-        lowerTitle.includes(kw)
+      // Count term matches in title only
+      const titleMatches = terms.filter((t) =>
+        lowerTitle.includes(t)
       ).length;
 
-      // If at least 1 keyword is in the title, accept
+      // If at least 1 term is in the title, accept
       if (titleMatches >= 1) {
         return true;
       }
 
-      // Otherwise require at least 2 keyword matches across title + content
-      const totalMatches = lowerKeywords.filter((kw) =>
-        haystack.includes(kw)
+      // Otherwise require at least 2 term matches across title + content
+      const totalMatches = terms.filter((t) =>
+        haystack.includes(t)
       ).length;
 
       return totalMatches >= 2;
