@@ -213,7 +213,7 @@ export class RssScraper implements BaseScraper {
     this.sources = NEWS_SOURCES;
     this.language = options?.language ?? 'de';
     this.timeoutMs = options?.timeoutMs ?? 8_000;
-    this.maxAgeHours = options?.maxAgeHours ?? 72;
+    this.maxAgeHours = options?.maxAgeHours ?? 720; // 30 days — matches last30days architecture
 
     // Default cantons: all keys available in the geo-feeds map
     this.cantons = options?.cantons ?? Object.keys(GOOGLE_NEWS_GEO_FEEDS);
