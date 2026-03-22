@@ -55,6 +55,10 @@ export interface Mention {
   articleId: string;
   sourceId: string;
   platform: Platform;
+  /** Article/post title. */
+  title: string;
+  /** Direct URL to the original article/post. */
+  url: string;
   content: string;
   author: string;
   authorUrl: string;

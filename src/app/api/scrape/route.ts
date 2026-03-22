@@ -32,11 +32,12 @@ export async function POST(request: Request) {
     const settings = await getSettings(user.userId);
     const keywords = settings.keywords.length > 0 ? settings.keywords : ['Zürich', 'Gemeinderat'];
 
-    // Run all configured scrapers via the scheduler
+    // Run only user-enabled scrapers via the scheduler
     const scrapeResult = await Promise.race([
       runAllScrapers(keywords, {
         language: settings.language,
         cantons: settings.cantons,
+        enabledPlatforms: settings.enabledPlatforms,
       }),
       new Promise<never>((_, reject) =>
         setTimeout(

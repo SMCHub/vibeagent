@@ -48,8 +48,8 @@ export async function extractTopics(mentions: Mention[]): Promise<Topic[]> {
     const now = new Date();
     const politicianId = mentions[0]?.politicianId ?? '';
 
-    return rawTopics.slice(0, 10).map((raw: any, i: number) => ({
-      id: `topic-${i}`,
+    return rawTopics.slice(0, 10).map((raw: any) => ({
+      id: crypto.randomUUID(),
       politicianId,
       name: String(raw.name || 'Unbekannt'),
       importance: ['hoch', 'mittel', 'niedrig'].includes(raw.importance)
@@ -83,7 +83,7 @@ function fallbackExtraction(mentions: Mention[]): Topic[] {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([name, count], i) => ({
-      id: `topic-${i}`,
+      id: crypto.randomUUID(),
       politicianId: mentions[0]?.politicianId ?? '',
       name,
       importance: count >= 3 ? ('hoch' as const) : count >= 2 ? ('mittel' as const) : ('niedrig' as const),

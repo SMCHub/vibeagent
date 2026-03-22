@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { AlertTriangle, TrendingUp, Calendar, Bell, Sparkles, Loader2 } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Calendar, Bell, Sparkles, Loader2, ExternalLink } from 'lucide-react';
 import { clsx } from 'clsx';
 import StatsRow from './StatsRow';
 import TopicRadar from './TopicRadar';
@@ -147,10 +147,23 @@ export default function SummaryTab({
                 <span className="truncate text-muted-foreground">
                   <span className="font-medium text-foreground">{m.author}</span>
                   {' — '}
-                  {m.content.slice(0, 80)}...
+                  {m.title || m.content.slice(0, 80) + '...'}
                 </span>
-                <span className="ml-auto shrink-0 text-xs text-muted-foreground" suppressHydrationWarning>
-                  {timeAgoDE(new Date(m.createdAt))}
+                <span className="ml-auto flex shrink-0 items-center gap-2">
+                  <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                    {timeAgoDE(new Date(m.createdAt))}
+                  </span>
+                  {m.url && (
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground transition-colors hover:text-[#1a73e8]"
+                      title="Zum Original"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                 </span>
               </div>
             ))}

@@ -23,6 +23,8 @@ interface SchedulerOptions {
   language?: string;
   /** Canton codes to monitor (e.g. ['ZH', 'BE']) */
   cantons?: string[];
+  /** Only run scrapers whose platform is in this list. If omitted, all configured scrapers run. */
+  enabledPlatforms?: string[];
 }
 
 interface SchedulerResult {
@@ -71,7 +73,11 @@ export async function runAllScrapers(
     new FacebookScraper(),
   ];
 
-  const configured = allScrapers.filter((s) => s.isConfigured());
+  const configured = allScrapers.filter((s) => {
+    if (!s.isConfigured()) return false;
+    if (options?.enabledPlatforms && !options.enabledPlatforms.includes(s.platform)) return false;
+    return true;
+  });
 
   console.log(
     `[Scheduler] Running ${configured.length}/${allScrapers.length} configured scrapers: ${configured.map(s => s.name).join(', ')}`,

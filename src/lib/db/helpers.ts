@@ -10,6 +10,8 @@ function rowToMention(row: Row): Mention {
     articleId: String(row.source_id),
     sourceId: String(row.source_id),
     platform: String(row.platform) as Platform,
+    title: String(row.title ?? ''),
+    url: String(row.url ?? ''),
     content: String(row.content),
     author: String(row.author),
     authorUrl: String(row.author_url ?? ''),
@@ -211,40 +213,58 @@ export async function ensureSettingsTable() {
     constituency TEXT NOT NULL DEFAULT 'Stadt Zürich',
     keywords TEXT NOT NULL DEFAULT '[]',
     language TEXT NOT NULL DEFAULT 'de',
-    cantons TEXT NOT NULL DEFAULT '["ZH"]'
+    cantons TEXT NOT NULL DEFAULT '["ZH"]',
+    enabled_platforms TEXT NOT NULL DEFAULT '["news","twitter","reddit","hackernews"]',
+    enabled_sources TEXT NOT NULL DEFAULT '["20min","blick","watson","nzz","tages-anzeiger","srf-news"]'
   )`);
+  // Migrate: add columns if they don't exist yet (older DBs)
+  try {
+    await rawClient.execute(`ALTER TABLE settings ADD COLUMN enabled_platforms TEXT NOT NULL DEFAULT '["news","twitter","reddit","hackernews"]'`);
+  } catch { /* column already exists */ }
+  try {
+    await rawClient.execute(`ALTER TABLE settings ADD COLUMN enabled_sources TEXT NOT NULL DEFAULT '["20min","blick","watson","nzz","tages-anzeiger","srf-news"]'`);
+  } catch { /* column already exists */ }
 }
 
-export async function getSettings(userId: string): Promise<{
+export interface UserSettings {
   name: string;
   title: string;
   constituency: string;
   keywords: string[];
   language: string;
   cantons: string[];
-}> {
+  enabledPlatforms: string[];
+  enabledSources: string[];
+}
+
+const DEFAULT_SETTINGS: UserSettings = {
+  name: 'Thomas Müller',
+  title: 'Gemeinderat',
+  constituency: 'Stadt Zürich',
+  keywords: ['Müller', 'Gemeinderat', 'Zürich', 'Verkehr', 'Wohnen', 'Klimaschutz'],
+  language: 'de',
+  cantons: ['ZH'],
+  enabledPlatforms: ['news', 'twitter', 'reddit', 'hackernews'],
+  enabledSources: ['20min', 'blick', 'watson', 'nzz', 'tages-anzeiger', 'srf-news'],
+};
+
+export async function getSettings(userId: string): Promise<UserSettings> {
   await ensureSettingsTable();
   const result = await rawClient.execute({ sql: "SELECT * FROM settings WHERE id = ?", args: [userId] });
   if (result.rows[0]) {
     const row = result.rows[0];
     return {
-      name: String(row.name || 'Thomas Müller'),
-      title: String(row.title || 'Gemeinderat'),
-      constituency: String(row.constituency || 'Stadt Zürich'),
+      name: String(row.name || DEFAULT_SETTINGS.name),
+      title: String(row.title || DEFAULT_SETTINGS.title),
+      constituency: String(row.constituency || DEFAULT_SETTINGS.constituency),
       keywords: JSON.parse(String(row.keywords || '[]')),
       language: String(row.language || 'de'),
       cantons: JSON.parse(String(row.cantons || '["ZH"]')),
+      enabledPlatforms: JSON.parse(String(row.enabled_platforms || JSON.stringify(DEFAULT_SETTINGS.enabledPlatforms))),
+      enabledSources: JSON.parse(String(row.enabled_sources || JSON.stringify(DEFAULT_SETTINGS.enabledSources))),
     };
   }
-  // Return defaults
-  return {
-    name: 'Thomas Müller',
-    title: 'Gemeinderat',
-    constituency: 'Stadt Zürich',
-    keywords: ['Müller', 'Gemeinderat', 'Zürich', 'Verkehr', 'Wohnen', 'Klimaschutz'],
-    language: 'de',
-    cantons: ['ZH'],
-  };
+  return { ...DEFAULT_SETTINGS };
 }
 
 export async function saveSettings(settings: {
@@ -254,10 +274,17 @@ export async function saveSettings(settings: {
   keywords: string[];
   language: string;
   cantons: string[];
+  enabledPlatforms?: string[];
+  enabledSources?: string[];
 }, userId: string) {
   await ensureSettingsTable();
   await rawClient.execute({
-    sql: `INSERT OR REPLACE INTO settings (id, name, title, constituency, keywords, language, cantons) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: [userId, settings.name, settings.title, settings.constituency, JSON.stringify(settings.keywords), settings.language, JSON.stringify(settings.cantons)],
+    sql: `INSERT OR REPLACE INTO settings (id, name, title, constituency, keywords, language, cantons, enabled_platforms, enabled_sources) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      userId, settings.name, settings.title, settings.constituency,
+      JSON.stringify(settings.keywords), settings.language, JSON.stringify(settings.cantons),
+      JSON.stringify(settings.enabledPlatforms ?? DEFAULT_SETTINGS.enabledPlatforms),
+      JSON.stringify(settings.enabledSources ?? DEFAULT_SETTINGS.enabledSources),
+    ],
   });
 }

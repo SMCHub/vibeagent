@@ -180,6 +180,18 @@ export default function SettingsPage() {
       if (Array.isArray(data.cantons) && data.cantons.length > 0) {
         setSelectedCantons(new Set(data.cantons))
       }
+      // Enabled platforms
+      if (Array.isArray(data.enabledPlatforms)) {
+        setPlatforms((prev) =>
+          prev.map((p) => ({ ...p, enabled: data.enabledPlatforms.includes(p.id) })),
+        )
+      }
+      // Enabled sources
+      if (Array.isArray(data.enabledSources)) {
+        setNationalSources((prev) =>
+          prev.map((s) => ({ ...s, enabled: data.enabledSources.includes(s.id) })),
+        )
+      }
     } catch (err) {
       console.error('Failed to load settings:', err)
     } finally {
@@ -235,7 +247,7 @@ export default function SettingsPage() {
     {
       id: 'linkedin',
       label: 'LinkedIn',
-      enabled: true,
+      enabled: false,
       description: 'Sehr beliebt in der Schweiz für politische und wirtschaftliche Diskussionen',
       watchedAccounts: '#Schweiz, #Gemeindepolitik, #Zürich',
     },
@@ -378,6 +390,8 @@ export default function SettingsPage() {
         keywords: keywordsArray,
         language: languageCode,
         cantons: Array.from(selectedCantons),
+        enabledPlatforms: platforms.filter((p) => p.enabled).map((p) => p.id),
+        enabledSources: nationalSources.filter((s) => s.enabled).map((s) => s.id),
       }
 
       const res = await fetch('/api/settings', {
@@ -778,52 +792,69 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-3">
-              {platforms.map((platform) => (
-                <div
-                  key={platform.id}
-                  className={`rounded-lg border transition-colors ${
-                    platform.enabled
-                      ? 'border-[#dadce0] bg-white'
-                      : 'border-[#dadce0] bg-[#f8f9fa]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between p-4">
-                    <div className="mr-4">
-                      <p className="text-sm font-medium text-[#202124]">{platform.label}</p>
-                      <p className="mt-0.5 text-xs text-[#80868b]">{platform.description}</p>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={platform.enabled}
-                      onClick={() => togglePlatform(platform.id)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        platform.enabled ? 'bg-[#1a73e8]' : 'bg-[#dadce0]'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                          platform.enabled ? 'translate-x-5' : 'translate-x-0'
+              {platforms.map((platform) => {
+                const isComingSoon = platform.id === 'linkedin' || platform.id === 'threads'
+                return (
+                  <div
+                    key={platform.id}
+                    className={`rounded-lg border transition-colors ${
+                      isComingSoon
+                        ? 'border-dashed border-[#dadce0] bg-[#f8f9fa] opacity-60'
+                        : platform.enabled
+                          ? 'border-[#dadce0] bg-white'
+                          : 'border-[#dadce0] bg-[#f8f9fa]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between p-4">
+                      <div className="mr-4">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-[#202124]">{platform.label}</p>
+                          {isComingSoon && (
+                            <span className="rounded-full bg-[#e8eaed] px-2 py-0.5 text-[10px] font-medium text-[#5f6368]">
+                              Bald verfügbar
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-[#80868b]">{platform.description}</p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={platform.enabled}
+                        disabled={isComingSoon}
+                        onClick={() => !isComingSoon && togglePlatform(platform.id)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                          isComingSoon
+                            ? 'cursor-not-allowed bg-[#dadce0]'
+                            : platform.enabled
+                              ? 'cursor-pointer bg-[#1a73e8]'
+                              : 'cursor-pointer bg-[#dadce0]'
                         }`}
-                      />
-                    </button>
-                  </div>
-                  {platform.enabled && (
-                    <div className="border-t border-[#e8eaed] px-4 py-3">
-                      <label className="mb-1.5 block text-xs font-medium text-[#5f6368]">
-                        Überwachte Accounts / Hashtags
-                      </label>
-                      <textarea
-                        value={platform.watchedAccounts}
-                        onChange={(e) => updateWatchedAccounts(platform.id, e.target.value)}
-                        rows={2}
-                        className="w-full rounded-lg border border-[#dadce0] bg-[#f8f9fa] p-2 text-xs text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors"
-                        placeholder="@accounts, #hashtags (kommagetrennt)"
-                      />
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                            platform.enabled && !isComingSoon ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {platform.enabled && !isComingSoon && (
+                      <div className="border-t border-[#e8eaed] px-4 py-3">
+                        <label className="mb-1.5 block text-xs font-medium text-[#5f6368]">
+                          Überwachte Accounts / Hashtags
+                        </label>
+                        <textarea
+                          value={platform.watchedAccounts}
+                          onChange={(e) => updateWatchedAccounts(platform.id, e.target.value)}
+                          rows={2}
+                          className="w-full rounded-lg border border-[#dadce0] bg-[#f8f9fa] p-2 text-xs text-[#202124] placeholder-[#80868b] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] outline-none transition-colors"
+                          placeholder="@accounts, #hashtags (kommagetrennt)"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </section>
 

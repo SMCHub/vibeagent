@@ -91,9 +91,9 @@ export default function CommentCard({
         <span className="text-xs text-[#5f6368]" suppressHydrationWarning>
           {timeAgoDE(new Date(mention.createdAt))}
         </span>
-        {mention.authorUrl && (
+        {mention.url && (
           <a
-            href={mention.authorUrl}
+            href={mention.url}
             target="_blank"
             rel="noopener noreferrer"
             className="ml-auto inline-flex items-center gap-1 text-xs text-[#5f6368] transition-colors hover:text-[#1a73e8]"
@@ -103,6 +103,24 @@ export default function CommentCard({
           </a>
         )}
       </div>
+
+      {/* Article title with link */}
+      {mention.title && (
+        <div className="mt-2">
+          {mention.url ? (
+            <a
+              href={mention.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#202124] underline decoration-[#dadce0] underline-offset-2 transition-colors hover:text-[#1a73e8] hover:decoration-[#1a73e8]"
+            >
+              {mention.title}
+            </a>
+          ) : (
+            <p className="text-sm font-semibold text-[#202124]">{mention.title}</p>
+          )}
+        </div>
+      )}
 
       {/* Sentiment indicator + Tag button */}
       <div className="mt-2 flex items-center gap-1.5">
