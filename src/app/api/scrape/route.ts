@@ -3,6 +3,8 @@ import { runAllScrapers } from '@/lib/scraper/scheduler';
 import { insertMention, getMentionCount, getSettings } from '@/lib/db/helpers';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const maxDuration = 60;
+
 /** Overall request timeout (55 seconds — stay within Vercel's 60s limit). */
 const SCRAPE_TIMEOUT_MS = 55_000;
 

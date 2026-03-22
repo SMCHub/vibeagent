@@ -3,6 +3,8 @@ import { improveResponse } from '@/lib/ai/responder';
 import { getResponseByMentionId, updateResponseImproved, getMentionById } from '@/lib/db/helpers';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);

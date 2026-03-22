@@ -4,6 +4,8 @@ import { STRATEGY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { getAllMentions, getAllTopics, getDashboardStats } from '@/lib/db/helpers';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const maxDuration = 30;
+
 export async function POST(request: Request) {
   try {
     const user = await getUserFromRequest(request);

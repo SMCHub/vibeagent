@@ -477,6 +477,17 @@ export class RssScraper implements BaseScraper {
    *
    * Articles matching any blocklist term are always excluded.
    */
+  /**
+   * Normalize text by stripping Unicode diacritics (ë→e, ü→u, etc.)
+   * so that "Përparim" matches "Perparim".
+   */
+  private static normalize(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
   private filterByKeywords(
     items: ScrapedItem[],
     keywords: string[]
@@ -484,11 +495,11 @@ export class RssScraper implements BaseScraper {
     // Build search terms: full keywords + individual words from multi-word keywords
     const searchTerms = new Set<string>();
     for (const kw of keywords) {
-      const lower = kw.toLowerCase().trim();
-      if (!lower) continue;
-      searchTerms.add(lower);
+      const normalized = RssScraper.normalize(kw).trim();
+      if (!normalized) continue;
+      searchTerms.add(normalized);
       // Split multi-word keywords into individual words (min 3 chars to avoid noise)
-      const words = lower.split(/\s+/).filter((w) => w.length >= 3);
+      const words = normalized.split(/\s+/).filter((w) => w.length >= 3);
       for (const word of words) {
         searchTerms.add(word);
       }
@@ -496,9 +507,9 @@ export class RssScraper implements BaseScraper {
     const terms = Array.from(searchTerms);
 
     return items.filter((item) => {
-      const lowerTitle = item.title.toLowerCase();
-      const lowerContent = item.content.toLowerCase();
-      const haystack = `${lowerTitle} ${lowerContent}`;
+      const normTitle = RssScraper.normalize(item.title);
+      const normContent = RssScraper.normalize(item.content);
+      const haystack = `${normTitle} ${normContent}`;
 
       // Blocklist check: skip clearly irrelevant articles
       if (
@@ -509,7 +520,7 @@ export class RssScraper implements BaseScraper {
 
       // Count term matches in title only
       const titleMatches = terms.filter((t) =>
-        lowerTitle.includes(t)
+        normTitle.includes(t)
       ).length;
 
       // If at least 1 term is in the title, accept

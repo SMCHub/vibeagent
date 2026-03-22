@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { analyzeSentiment } from '@/lib/ai/sentiment';
 import { extractTopics } from '@/lib/ai/topics';
+
+export const maxDuration = 60;
+
 import {
   getAllMentions,
   updateMentionSentiment,
