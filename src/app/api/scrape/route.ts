@@ -3,8 +3,8 @@ import { runAllScrapers } from '@/lib/scraper/scheduler';
 import { insertMention, getMentionCount, getSettings } from '@/lib/db/helpers';
 import { getUserFromRequest } from '@/lib/auth';
 
-/** Overall request timeout (120 seconds — more scrapers need more time). */
-const SCRAPE_TIMEOUT_MS = 120_000;
+/** Overall request timeout (55 seconds — stay within Vercel's 60s limit). */
+const SCRAPE_TIMEOUT_MS = 55_000;
 
 export async function GET(request: Request) {
   const user = await getUserFromRequest(request);

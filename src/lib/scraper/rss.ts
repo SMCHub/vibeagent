@@ -212,7 +212,7 @@ export class RssScraper implements BaseScraper {
   constructor(options?: RssScraperOptions) {
     this.sources = NEWS_SOURCES;
     this.language = options?.language ?? 'de';
-    this.timeoutMs = options?.timeoutMs ?? 10_000;
+    this.timeoutMs = options?.timeoutMs ?? 8_000;
     this.maxAgeHours = options?.maxAgeHours ?? 72;
 
     // Default cantons: all keys available in the geo-feeds map
